@@ -21,6 +21,21 @@ namespace TaskManagerMVC.Repositories.Imp
                 .Include(t => t.User)
                 .ToListAsync();
         }
+        public async Task<Models.Task?> GetByIdAsync(int id)
+        {
+            return await _context.Tasks
+                .Include(t => t.Status)
+                .Include(t => t.Priority)
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.TaskId == id);
+        }
+
+        public async Task UpdateAsync(Models.Task task)
+        {
+            _context.Tasks.Update(task);
+
+            await Task.CompletedTask;
+        }
 
         public async Task AddAsync(Models.Task task)
         {

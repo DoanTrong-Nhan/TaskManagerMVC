@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
 using TaskManagerAPI.Dtos;
+using TaskManagerAPI.Validate;
+using TaskManagerMVC.Models;
 using TaskManagerMVC.Repositories.Interfaces;
 using TaskManagerMVC.Services.Interfaces;
 
@@ -23,20 +25,18 @@ namespace TaskManagerMVC.Services.Imp
                 TaskId = t.TaskId,
                 Title = t.Title,
                 Description = t.Description,
-                StartDate = t.StartDate?.ToString("dd/MM/yyyy"),
-                DueDate = t.DueDate?.ToString("dd/MM/yyyy"),
+                StartDate = DateHelper.ToDisplayDate(t.StartDate),
+                DueDate = DateHelper.ToDisplayDate(t.DueDate),
                 PriorityName = t.Priority?.PriorityName,
                 StatusName = t.Status?.StatusName,
                 UserFullName = t.User?.FullName
             }).ToList();
         }
 
-
-        public async Task CreateTaskAsync(TaskCreateDto dto)
+        public async System.Threading.Tasks.Task CreateTaskAsync(TaskCreateDto dto)
         {
-            // Chuyển đổi string date sang DateTime?
-            DateTime? startDate = ParseDate(dto.StartDate);
-            DateTime? dueDate = ParseDate(dto.DueDate);
+            var startDate = DateHelper.ParseExactOrNull(dto.StartDate);
+            var dueDate = DateHelper.ParseExactOrNull(dto.DueDate);
 
             var task = new Models.Task(dto.Title)
             {
@@ -45,19 +45,44 @@ namespace TaskManagerMVC.Services.Imp
                 DueDate = dueDate
             };
 
-            // Gán các khóa ngoại
-            typeof(Models.Task).GetProperty("StatusId")?.SetValue(task, dto.StatusId);
-            typeof(Models.Task).GetProperty("PriorityId")?.SetValue(task, dto.PriorityId);
-            typeof(Models.Task).GetProperty("UserId")?.SetValue(task, dto.UserId);
+            task.SetForeignKeys(dto.StatusId, dto.PriorityId, dto.UserId);
 
             await _taskRepository.AddAsync(task);
             await _taskRepository.SaveChangesAsync();
         }
 
-        private DateTime? ParseDate(string? dateStr)
+            public async Task<TaskUpdateDto> GetTaskForUpdateAsync(int id)
+            {
+                var task = await _taskRepository.GetByIdAsync(id);
+                if (task == null) throw new KeyNotFoundException();
+
+                return new TaskUpdateDto
+                {
+                    Title = task.Title,
+                    Description = task.Description,
+                    StartDate = DateHelper.ToDisplayDate(task.StartDate),
+                    DueDate = DateHelper.ToDisplayDate(task.DueDate),
+                    StatusId = task.StatusId ?? 0,
+                    PriorityId = task.PriorityId ?? 0,
+                    UserId = task.UserId ?? 0
+                };
+            }
+
+        public async System.Threading.Tasks.Task UpdateTaskAsync(int id, TaskUpdateDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dateStr)) return null;
-            return DateTime.ParseExact(dateStr, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+            var task = await _taskRepository.GetByIdAsync(id);
+            if (task == null)
+                throw new KeyNotFoundException($"Task with ID {id} not found.");
+
+            var startDate = DateHelper.ParseExactOrNull(dto.StartDate);
+            var dueDate = DateHelper.ParseExactOrNull(dto.DueDate);
+
+            task.Update(dto.Title, dto.Description, startDate, dueDate,
+                        dto.StatusId, dto.PriorityId, dto.UserId);
+
+            await _taskRepository.UpdateAsync(task);
+            await _taskRepository.SaveChangesAsync();
         }
+
     }
 }

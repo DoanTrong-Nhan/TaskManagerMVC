@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using TaskStatus = TaskManagerMVC.Models.TaskStatus;
+using TaskManagerMVC.Models;
 
 namespace TaskManagerMVC.Models
 {
     public class Task
     {
-        private string _title = null!;
+        private string _title;
         private string? _description;
         private DateTime? _startDate;
         private DateTime? _dueDate;
@@ -46,23 +48,9 @@ namespace TaskManagerMVC.Models
             set => _dueDate = value;
         }
 
-        public int? StatusId
-        {
-            get => _statusId;
-            private set => _statusId = value;
-        }
-
-        public int? PriorityId
-        {
-            get => _priorityId;
-            private set => _priorityId = value;
-        }
-
-        public int? UserId
-        {
-            get => _userId;
-            private set => _userId = value;
-        }
+        public int? StatusId => _statusId;
+        public int? PriorityId => _priorityId;
+        public int? UserId => _userId;
 
         public TaskPriority? Priority
         {
@@ -82,18 +70,34 @@ namespace TaskManagerMVC.Models
             set => _user = value;
         }
 
-        public virtual ICollection<TaskComment> TaskComments
-        {
-            get => _taskComments;
-            private set => _taskComments = value;
-        }
+        public virtual ICollection<TaskComment> TaskComments => _taskComments;
 
-       
         public Task(string title)
         {
             Title = title;
         }
 
         private Task() { }
+
+        public void SetForeignKeys(int statusId, int priorityId, int userId)
+        {
+            _statusId = statusId;
+            _priorityId = priorityId;
+            _userId = userId;
+        }
+
+        public void Update(string title, string? description, DateTime? startDate, DateTime? dueDate,
+                           int statusId, int priorityId, int userId)
+        {
+            Title = title;
+            Description = description;
+            StartDate = startDate;
+            DueDate = dueDate;
+            SetForeignKeys(statusId, priorityId, userId);
+        }
+
+        public bool IsOverdue =>
+            DueDate.HasValue && DueDate.Value < DateTime.Today && Status?.StatusName != "Completed";
     }
+
 }

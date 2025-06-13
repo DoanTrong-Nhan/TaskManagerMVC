@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using TaskManagerAPI.Dtos;
 using TaskManagerMVC.Services.Interfaces;
 
@@ -22,8 +23,9 @@ namespace TaskManagerMVC.Controllers
 
         // Form tạo mới
         [HttpGet]
-        public IActionResult CreateTask()
+        public async Task<IActionResult> CreateTask()
         {
+            await LoadDropdowns();
             return View();
         }
 
@@ -32,11 +34,23 @@ namespace TaskManagerMVC.Controllers
         public async Task<IActionResult> CreateTask(TaskCreateDto dto)
         {
             if (!ModelState.IsValid)
-                return View(dto); // Trả lại form nếu có lỗi validate
+            {
+                await LoadDropdowns();
+                return View(dto);
+            }
 
-            await _taskService.CreateTaskAsync(dto);
-
-            return RedirectToAction("ListTask");
+            try
+            {
+                await _taskService.CreateTaskAsync(dto);
+                TempData["Success"] = "Task created successfully!";
+                return RedirectToAction("ListTask");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"An error occurred: {ex.Message}");
+                await LoadDropdowns();
+                return View(dto);
+            }
         }
 
         // Form cập nhật task
@@ -76,5 +90,18 @@ namespace TaskManagerMVC.Controllers
                 return View(dto);
             }
         }
+
+
+        private async Task LoadDropdowns()
+        {
+            var statuses = await _taskService.GetStatusListAsync();
+            var priorities = await _taskService.GetPriorityListAsync();
+            var users = await _taskService.GetUserListAsync();
+
+            ViewBag.StatusId = new SelectList(statuses, "Value", "Text");
+            ViewBag.PriorityId = new SelectList(priorities, "Value", "Text");
+            ViewBag.UserId = new SelectList(users, "Value", "Text");
+        }
+
     }
 }

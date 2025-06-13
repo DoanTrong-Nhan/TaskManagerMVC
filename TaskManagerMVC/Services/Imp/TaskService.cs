@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Globalization;
 using TaskManagerAPI.Dtos;
 using TaskManagerAPI.Validate;
 using TaskManagerMVC.Models;
@@ -82,6 +83,37 @@ namespace TaskManagerMVC.Services.Imp
 
             await _taskRepository.UpdateAsync(task);
             await _taskRepository.SaveChangesAsync();
+        }
+
+
+        public async Task<IEnumerable<SelectListItem>> GetStatusListAsync()
+        {
+            var statuses = await _taskRepository.GetAllStatusesAsync();
+            return statuses.Select(s => new SelectListItem
+            {
+                Value = s.StatusId.ToString(),
+                Text = s.StatusName
+            });
+        }
+
+        public async Task<IEnumerable<SelectListItem>> GetPriorityListAsync()
+        {
+            var priorities = await _taskRepository.GetAllPrioritiesAsync();
+            return priorities.Select(p => new SelectListItem
+            {
+                Value = p.PriorityId.ToString(),
+                Text = p.PriorityName
+            });
+        }
+
+        public async Task<IEnumerable<SelectListItem>> GetUserListAsync()
+        {
+            var users = await _taskRepository.GetAllUsersAsync();
+            return users.Select(u => new SelectListItem
+            {
+                Value = u.UserId.ToString(),
+                Text = u.FullName ?? u.Username
+            });
         }
 
     }

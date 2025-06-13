@@ -1,60 +1,102 @@
-﻿@model TaskManagerMVC.Models.Task
+﻿@model TaskManagerAPI.Dtos.TaskCreateDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 @{
-    ViewData["Title"] = "Create Task";
+    ViewData["Title"] = "Tạo Task Mới";
 }
 
-<h1>Index</h1>
+<h1>Tạo Task Mới</h1>
 
-<h4>Task</h4>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Index">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
+    <div class="col-md-6">
+        <form asp-action="CreateTask" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Title" class="control-label">Tiêu đề <span class="text-danger">*</span></label>
+                <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề task" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Description" class="control-label">Mô tả</label>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Nhập mô tả task"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="StartDate" class="control-label"></label>
-                <input asp-for="StartDate" class="form-control" />
+
+            <div class="form-group mb-3">
+                <label asp-for="StartDate" class="control-label">Ngày bắt đầu</label>
+                <input asp-for="StartDate" class="form-control datepicker" type="text" placeholder="dd/MM/yyyy" />
                 <span asp-validation-for="StartDate" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="DueDate" class="control-label"></label>
-                <input asp-for="DueDate" class="form-control" />
+
+            <div class="form-group mb-3">
+                <label asp-for="DueDate" class="control-label">Ngày hết hạn</label>
+                <input asp-for="DueDate" class="form-control datepicker" type="text" placeholder="dd/MM/yyyy" />
                 <span asp-validation-for="DueDate" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="StatusId" class="control-label"></label>
-                <select asp-for="StatusId" class ="form-control" asp-items="ViewBag.StatusId"></select>
+
+            <div class="form-group mb-3">
+                <label asp-for="StatusId" class="control-label">Trạng thái <span class="text-danger">*</span></label>
+                <select asp-for="StatusId" class="form-control" asp-items="ViewBag.StatusId">
+                    <option value="">-- Chọn Trạng thái --</option>
+                </select>
+                <span asp-validation-for="StatusId" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="PriorityId" class="control-label"></label>
-                <select asp-for="PriorityId" class ="form-control" asp-items="ViewBag.PriorityId"></select>
+
+            <div class="form-group mb-3">
+                <label asp-for="PriorityId" class="control-label">Độ ưu tiên <span class="text-danger">*</span></label>
+                <select asp-for="PriorityId" class="form-control" asp-items="ViewBag.PriorityId">
+                    <option value="">-- Chọn Độ ưu tiên --</option>
+                </select>
+                <span asp-validation-for="PriorityId" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <select asp-for="UserId" class ="form-control" asp-items="ViewBag.UserId"></select>
+
+            <div class="form-group mb-3">
+                <label asp-for="UserId" class="control-label">Người thực hiện <span class="text-danger">*</span></label>
+                <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId">
+                    <option value="">-- Chọn Người dùng --</option>
+                </select>
+                <span asp-validation-for="UserId" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            <div class="form-group mt-4">
+                <input type="submit" value="Tạo mới" class="btn btn-primary" />
+                <a asp-action="ListTask" class="btn btn-secondary ms-2">Quay lại</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.datepicker').datepicker({
+                format: 'dd/mm/yyyy',
+                autoclose: true,
+                todayHighlight: true
+            });
+        });
+    </script>
 }

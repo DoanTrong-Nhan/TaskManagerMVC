@@ -1,10 +1,11 @@
 ﻿@model List<TaskManagerAPI.Dtos.TaskDto>
 
+
 @{
     ViewData["Title"] = "Task List";
 }
 
-<a asp-controller="Task" asp-action="CreateTask" class="btn btn-primary m-2">+ Add new</a>
+<a asp-action="CreateTask" class="btn btn-primary m-2">+ Add new</a>
 
 <!-- Filters Form -->
 <form method="get">

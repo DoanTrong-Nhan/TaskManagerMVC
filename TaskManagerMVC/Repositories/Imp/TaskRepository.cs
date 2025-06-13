@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagerMVC.DBContext;
+using TaskManagerMVC.Models;
 using TaskManagerMVC.Repositories.Interfaces;
 
 namespace TaskManagerMVC.Repositories.Imp
@@ -30,21 +31,36 @@ namespace TaskManagerMVC.Repositories.Imp
                 .FirstOrDefaultAsync(t => t.TaskId == id);
         }
 
-        public async Task UpdateAsync(Models.Task task)
+        public async System.Threading.Tasks.Task UpdateAsync(Models.Task task)
         {
             _context.Tasks.Update(task);
 
-            await Task.CompletedTask;
+            await System.Threading.Tasks.Task.CompletedTask;
         }
 
-        public async Task AddAsync(Models.Task task)
+        public async System.Threading.Tasks.Task AddAsync(Models.Task task)
         {
             await _context.Tasks.AddAsync(task);
         }
 
-        public async Task SaveChangesAsync()
+        public async System.Threading.Tasks.Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Models.TaskStatus>> GetAllStatusesAsync()
+        {
+            return await _context.TaskStatuses.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<IEnumerable<TaskPriority>> GetAllPrioritiesAsync()
+        {
+            return await _context.TaskPriorities.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            return await _context.Users.AsNoTracking().ToListAsync();
         }
     }
 

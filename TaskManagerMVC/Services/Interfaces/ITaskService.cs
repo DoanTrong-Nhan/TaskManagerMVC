@@ -4,6 +4,7 @@
 
     public interface ITaskService
     {
+        Task<List<TaskDto>> GetAllTasksAsync();
         Task CreateTaskAsync(TaskCreateDto dto);
     }
 

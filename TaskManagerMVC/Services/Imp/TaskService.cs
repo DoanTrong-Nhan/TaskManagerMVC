@@ -14,6 +14,24 @@ namespace TaskManagerMVC.Services.Imp
             _taskRepository = taskRepository;
         }
 
+        public async Task<List<TaskDto>> GetAllTasksAsync()
+        {
+            var tasks = await _taskRepository.GetAllWithRelationsAsync();
+
+            return tasks.Select(t => new TaskDto
+            {
+                TaskId = t.TaskId,
+                Title = t.Title,
+                Description = t.Description,
+                StartDate = t.StartDate?.ToString("dd/MM/yyyy"),
+                DueDate = t.DueDate?.ToString("dd/MM/yyyy"),
+                PriorityName = t.Priority?.PriorityName,
+                StatusName = t.Status?.StatusName,
+                UserFullName = t.User?.FullName
+            }).ToList();
+        }
+
+
         public async Task CreateTaskAsync(TaskCreateDto dto)
         {
             // Chuyển đổi string date sang DateTime?

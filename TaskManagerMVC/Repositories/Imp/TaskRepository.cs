@@ -1,4 +1,5 @@
-﻿using TaskManagerMVC.DBContext;
+﻿using Microsoft.EntityFrameworkCore;
+using TaskManagerMVC.DBContext;
 using TaskManagerMVC.Repositories.Interfaces;
 
 namespace TaskManagerMVC.Repositories.Imp
@@ -10,6 +11,15 @@ namespace TaskManagerMVC.Repositories.Imp
         public TaskRepository(TaskManagerDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<List<Models.Task>> GetAllWithRelationsAsync()
+        {
+            return await _context.Tasks
+                .Include(t => t.Priority)
+                .Include(t => t.Status)
+                .Include(t => t.User)
+                .ToListAsync();
         }
 
         public async Task AddAsync(Models.Task task)

@@ -14,10 +14,13 @@ namespace TaskManagerMVC.Controllers
             _taskService = taskService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> ListTask()
         {
-            return View();
+            var tasks = await _taskService.GetAllTasksAsync();
+            return View(tasks);
         }
+
+
 
         [HttpGet]
         public IActionResult Create()
@@ -33,7 +36,7 @@ namespace TaskManagerMVC.Controllers
 
             await _taskService.CreateTaskAsync(dto);
 
-            return RedirectToAction("Index");
+            return RedirectToAction("CreateTask");
         }
     }
 }

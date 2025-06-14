@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TaskManagerAPI.Dtos;
+using TaskManagerMVC.Dto.TaskDto;
 using TaskManagerMVC.Services.Interfaces;
 
 namespace TaskManagerMVC.Controllers
@@ -18,6 +19,7 @@ namespace TaskManagerMVC.Controllers
         public async Task<IActionResult> ListTask()
         {
             var tasks = await _taskService.GetAllTasksAsync();
+            await LoadDropdowns();
             return View(tasks);
         }
 
@@ -31,6 +33,7 @@ namespace TaskManagerMVC.Controllers
 
         // Xử lý tạo mới
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateTask(TaskCreateDto dto)
         {
             if (!ModelState.IsValid)
@@ -39,56 +42,60 @@ namespace TaskManagerMVC.Controllers
                 return View(dto);
             }
 
-            try
-            {
-                await _taskService.CreateTaskAsync(dto);
-                TempData["Success"] = "Task created successfully!";
-                return RedirectToAction("ListTask");
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", $"An error occurred: {ex.Message}");
-                await LoadDropdowns();
-                return View(dto);
-            }
+            await _taskService.CreateTaskAsync(dto);
+            TempData["SuccessMessage"] = "Task đã được tạo thành công!";
+            return RedirectToAction("ListTask");
         }
 
         // Form cập nhật task
         [HttpGet]
         public async Task<IActionResult> Update(int id)
         {
-            try
-            {
-                var dto = await _taskService.GetTaskForUpdateAsync(id);
-                return View(dto);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
+            var dto = await _taskService.GetTaskForUpdateAsync(id);
+            ViewBag.TaskId = id; // Lưu TaskId vào ViewBag cho modal xóa
+            await LoadDropdowns();
+            return View(dto);
         }
 
         // Xử lý cập nhật task
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(int id, TaskUpdateDto dto)
         {
             if (!ModelState.IsValid)
+            {
+                ViewBag.TaskId = id; // Lưu TaskId vào ViewBag nếu validation thất bại
+                await LoadDropdowns();
                 return View(dto);
+            }
 
-            try
-            {
-                await _taskService.UpdateTaskAsync(id, dto);
-                return RedirectToAction("ListTask");
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
-            catch (FormatException ex)
-            {
-                ModelState.AddModelError("", ex.Message);
-                return View(dto);
-            }
+            await _taskService.UpdateTaskAsync(id, dto);
+            TempData["SuccessMessage"] = "Task đã được cập nhật thành công!";
+            return RedirectToAction("ListTask");
+        }
+        // Action để xóa Task
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var dto = new DeleteTaskDto { TaskId = id };
+            await _taskService.DeleteTaskAsync(dto);
+            TempData["SuccessMessage"] = "Task đã được xóa thành công!";
+            return RedirectToAction("ListTask");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Search(string? title, int? statusId, int? priorityId)
+        {
+            var tasks = await _taskService.GetFilteredTasks(title, statusId, priorityId);
+
+            // Giữ lại giá trị đã chọn để hiển thị lại trên giao diện
+            ViewBag.SelectedTitle = title;
+            ViewBag.SelectedStatusId = statusId;
+            ViewBag.SelectedPriorityId = priorityId;
+
+            await LoadDropdowns(); // để hiển thị dropdown filter
+            return View("ListTask", tasks); // Dùng lại view ListTask để hiển thị kết quả tìm kiếm
         }
 
 
@@ -102,6 +109,5 @@ namespace TaskManagerMVC.Controllers
             ViewBag.PriorityId = new SelectList(priorities, "Value", "Text");
             ViewBag.UserId = new SelectList(users, "Value", "Text");
         }
-
     }
 }

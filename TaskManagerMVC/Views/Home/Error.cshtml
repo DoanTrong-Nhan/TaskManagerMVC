@@ -1,0 +1,11 @@
+﻿@* Views/Home/Error.cshtml *@
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1>Lỗi</h1>
+<div class="alert alert-danger">
+    <h4>Mã lỗi: @ViewBag.StatusCode</h4>
+    <p>@ViewBag.Message</p>
+    <a href="@Url.Action("ListTask", "Task")" class="btn btn-primary">Quay lại danh sách Task</a>
+</div>

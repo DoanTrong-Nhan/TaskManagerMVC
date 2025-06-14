@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using NuGet.Protocol.Core.Types;
 using System.Globalization;
 using TaskManagerAPI.Dtos;
 using TaskManagerAPI.Validate;
+using TaskManagerMVC.Dto.TaskDto;
 using TaskManagerMVC.Models;
 using TaskManagerMVC.Repositories.Interfaces;
 using TaskManagerMVC.Services.Interfaces;
@@ -55,9 +57,9 @@ namespace TaskManagerMVC.Services.Imp
             public async Task<TaskUpdateDto> GetTaskForUpdateAsync(int id)
             {
                 var task = await _taskRepository.GetByIdAsync(id);
-                if (task == null) throw new KeyNotFoundException();
+                if (task == null) throw new KeyNotFoundException($"Task with ID {id} not found.");
 
-                return new TaskUpdateDto
+            return new TaskUpdateDto
                 {
                     Title = task.Title,
                     Description = task.Description,
@@ -84,7 +86,14 @@ namespace TaskManagerMVC.Services.Imp
             await _taskRepository.UpdateAsync(task);
             await _taskRepository.SaveChangesAsync();
         }
+        public async System.Threading.Tasks.Task DeleteTaskAsync(DeleteTaskDto dto)
+        {
+            var task = await _taskRepository.GetByIdAsync(dto.TaskId);
+            if (task == null)
+                throw new KeyNotFoundException($"Task with ID {dto.TaskId} not found.");
 
+            await _taskRepository.DeleteAsync(dto.TaskId);
+        }
 
         public async Task<IEnumerable<SelectListItem>> GetStatusListAsync()
         {
@@ -114,6 +123,11 @@ namespace TaskManagerMVC.Services.Imp
                 Value = u.UserId.ToString(),
                 Text = u.FullName ?? u.Username
             });
+        }
+
+        public async Task<List<TaskDto>> GetFilteredTasks(string? title, int? statusId, int? priorityId)
+        {
+            return await _taskRepository.GetFilteredTasksAsync(title, statusId, priorityId);
         }
 
     }

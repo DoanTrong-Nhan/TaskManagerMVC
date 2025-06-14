@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace TaskManagerAPI.Validate
 {
@@ -12,17 +14,31 @@ namespace TaskManagerAPI.Validate
             _format = format;
         }
 
-        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            var strValue = value as string;
+            if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                return ValidationResult.Success; // Cho phép giá trị null nếu không bắt buộc
+            }
 
-            if (string.IsNullOrWhiteSpace(strValue))
+            string input = value.ToString();
+            // Thử phân tích với định dạng yyyy-MM-dd (từ input type="date")
+            if (DateTime.TryParseExact(input, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))
+            {
+                // Chuyển đổi thành định dạng dd/MM/yyyy để lưu vào DTO
+                string formattedDate = parsedDate.ToString(_format, CultureInfo.InvariantCulture);
+                // Gán lại giá trị đã chuyển đổi vào DTO
+                var propertyInfo = validationContext.ObjectType.GetProperty(validationContext.MemberName);
+                propertyInfo.SetValue(validationContext.ObjectInstance, formattedDate);
                 return ValidationResult.Success;
-
-            if (DateTime.TryParseExact(strValue, _format, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            }
+            // Thử phân tích với định dạng dd/MM/yyyy (nếu người dùng nhập thủ công)
+            if (DateTime.TryParseExact(input, _format, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            {
                 return ValidationResult.Success;
+            }
 
-            return new ValidationResult(ErrorMessage ?? $"Định dạng ngày không hợp lệ. Định dạng mong muốn: {_format}");
+            return new ValidationResult(ErrorMessage);
         }
     }
 }

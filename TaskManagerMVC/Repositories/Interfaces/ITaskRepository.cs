@@ -1,4 +1,5 @@
-﻿using TaskManagerMVC.Models;
+﻿using TaskManagerAPI.Dtos;
+using TaskManagerMVC.Models;
 
 namespace TaskManagerMVC.Repositories.Interfaces
 {
@@ -15,6 +16,10 @@ namespace TaskManagerMVC.Repositories.Interfaces
         Task<IEnumerable<Models.TaskStatus>> GetAllStatusesAsync();
         Task<IEnumerable<TaskPriority>> GetAllPrioritiesAsync();
         Task<IEnumerable<User>> GetAllUsersAsync();
+        System.Threading.Tasks.Task DeleteAsync(int id);
+
+        /// Lọc danh sách task theo tiêu đề, trạng thái, và độ ưu tiên.
+        Task<List<TaskDto>> GetFilteredTasksAsync(string? title, int? statusId, int? priorityId);
     }
 
 }

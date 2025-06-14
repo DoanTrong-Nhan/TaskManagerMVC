@@ -8,66 +8,42 @@
 <a asp-action="CreateTask" class="btn btn-primary m-2">+ Add new</a>
 
 <!-- Filters Form -->
-<form method="get">
-    <div class="row mt-2">
-        <div class="col-md-3">
-            <div class="input-group">
-                <input class="form-control" type="text" name="searchText" placeholder="Search by Title">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </div>
-        </div>
-    </div>
+<form method="get" asp-action="Search">
 
     <div class="row mt-2">
-        <div class="col-md-3">
-            Create:
+        <div class="col-md-4">
             <div class="input-group">
-                <input class="form-control" type="date" name="createFilter">
-            </div>
-        </div>
-        <div class="col-md-3">
-            Due:
-            <div class="input-group">
-                <input class="form-control" type="date" name="completeFilter">
-                <button type="submit" class="btn btn-primary">Search</button>
+                <input class="form-control" type="text" name="title" placeholder="Tìm theo tiêu đề"
+                       value="@ViewBag.SelectedTitle" />
             </div>
         </div>
     </div>
 
     <div class="form-inline d-flex align-items-center flex-wrap mt-3">
-        <select class="form-control custom-select w-25 mr-2" name="typeFilter">
-            <option value="">-- Select Type --</option>
-            <option value="Feature">Feature</option>
-            <option value="Bug">Bug</option>
-            <option value="Documentation">Documentation</option>
+        <select class="form-control custom-select w-25 m-2" name="priorityId">
+            <option value="">-- Chọn độ ưu tiên --</option>
+            @foreach (var item in (SelectList)ViewBag.PriorityId)
+            {
+                var isSelected = ViewBag.SelectedPriorityId?.ToString() == item.Value;
+                <option value="@item.Value" selected="@(isSelected ? "selected" : null)">@item.Text</option>
+            }
         </select>
 
-        <select class="form-control custom-select w-25 m-2" name="priorityFilter">
-            <option value="">-- Select Priority --</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
+
+        <select class="form-control custom-select w-25 m-2" name="statusId">
+            <option value="">-- Chọn trạng thái --</option>
+            @foreach (var item in (SelectList)ViewBag.StatusId)
+            {
+                var isSelected = ViewBag.SelectedStatusId?.ToString() == item.Value;
+                <option value="@item.Value" selected="@(isSelected ? "selected" : null)">@item.Text</option>
+            }
         </select>
 
-        <select class="form-control custom-select w-25 m-2" name="statusFilter">
-            <option value="">-- Select Status --</option>
-            <option value="1">Not Yet</option>
-            <option value="2">In Progress</option>
-            <option value="3">Done</option>
-        </select>
 
-        <select class="form-control custom-select w-25" name="createByFilter">
-            <option value="">-- Select Create By --</option>
-            <option value="1">Nhân Đoàn</option>
-            <option value="3">Tuấn Linh</option>
-            <option value="4">Mai Giang</option>
-            <option value="5">Nguyễn Nam</option>
-            <option value="6">Xuân Mạnh</option>
-        </select>
-
-        <button type="submit" class="btn btn-primary m-3">Apply Filters</button>
+        <button type="submit" class="btn btn-success m-3">Search</button>
     </div>
 </form>
+
 
 @if (Model != null && Model.Any())
 {

@@ -1,4 +1,10 @@
-﻿namespace TaskManagerMVC.Middleware
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
+using System.Net;
+
+namespace TaskManagerMVC.Middleware
 {
     public class ExceptionHandlingMiddleware
     {
@@ -19,19 +25,10 @@
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception");
+                _logger.LogError(ex, "Unhandled exception occurred");
 
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = GetStatusCode(ex); 
-
-                var response = new
-                {
-                    status = context.Response.StatusCode,
-                    message = ex.Message, 
-                                        
-                };
-
-                await context.Response.WriteAsJsonAsync(response);
+                // Chuyển hướng đến action Error trong HomeController
+                context.Response.Redirect($"/Home/Error?statusCode={GetStatusCode(ex)}&message={Uri.EscapeDataString(ex.Message)}");
             }
         }
 
@@ -45,5 +42,4 @@
             };
         }
     }
-
 }

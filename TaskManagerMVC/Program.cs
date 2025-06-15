@@ -1,10 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using TaskManagerMVC.DBContext;
-using TaskManagerMVC.JWT;
 using TaskManagerMVC.Middleware;
 using TaskManagerMVC.Repositories.Imp;
 using TaskManagerMVC.Repositories.Interfaces;
@@ -14,69 +10,50 @@ using TaskManagerMVC.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load cấu hình bí mật và biến môi trường
+// Load cấu hình từ secrets và environment
 builder.Configuration.AddUserSecrets<Program>();
 builder.Configuration.AddEnvironmentVariables();
 
-// Add MVC Controllers with Views
+// Add MVC
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddScoped<PermissionSeeder>();
-
-// Đọc cấu hình JWT từ appsettings.json
-var jwtSettings = new JwtSetting();
-builder.Configuration.GetSection("JwtSettings").Bind(jwtSettings);
-builder.Services.AddSingleton(jwtSettings);
-
-// Cấu hình Authentication với JWT Bearer
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+// Cấu hình Cookie Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.Issuer,
-        ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret!)),
-        ClockSkew = TimeSpan.Zero // Không cho phép lệch thời gian
-    };
-});
+        options.LoginPath = "/Login/Index";
+        options.AccessDeniedPath = "/Login/AccessDenied";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Bắt buộc HTTPS
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.SlidingExpiration = true;
+    });
 
 // Đăng ký DbContext
 builder.Services.AddDbContext<TaskManagerDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Đăng ký các repository và service
+// Đăng ký các services và repositories
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+builder.Services.AddScoped<PermissionSeeder>();
 
-// JWT Token Generator
-builder.Services.AddScoped<JwtTokenGenerator>();
-
-// Logging (được hỗ trợ sẵn nhưng khai báo rõ)
 builder.Services.AddLogging();
 
 var app = builder.Build();
 
+// Seed quyền khi khởi chạy
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<PermissionSeeder>();
     seeder.SeedPermissions();
 }
 
-
-// Configure the HTTP request pipeline
+// Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -92,14 +69,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseMiddleware<JwtFromCookieMiddleware>();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<PermissionMiddleware>();
 
-// Định tuyến Controller
+// Cấu hình định tuyến mặc định
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Index}/{id?}");

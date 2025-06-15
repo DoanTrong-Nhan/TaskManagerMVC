@@ -17,6 +17,8 @@ public partial class TaskManagerDbContext : DbContext
     }
 
     public virtual DbSet<Permission> Permissions { get; set; }
+    public virtual DbSet<RolePermission> RolePermissions { get; set; }
+
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -45,37 +47,23 @@ public partial class TaskManagerDbContext : DbContext
             entity.HasKey(e => e.RoleId).HasName("PK__Roles__8AFACE1AE05EC7B0");
 
             entity.Property(e => e.RoleName).HasMaxLength(50);
-
-            entity.HasMany(d => d.Permissions).WithMany(p => p.Roles)
-                .UsingEntity<Dictionary<string, object>>(
-                    "RolePermission",
-                    r => r.HasOne<Permission>().WithMany()
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__RolePermi__Permi__6383C8BA"),
-                    l => l.HasOne<Role>().WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__RolePermi__RoleI__628FA481"),
-                    j =>
-                    {
-                        j.HasKey("RoleId", "PermissionId").HasName("PK__RolePerm__6400A1A8E7C4AB11");
-                        j.ToTable("RolePermissions");
-                    });
         });
 
-        modelBuilder.Entity<RolePermission>()
-            .HasKey(rp => new { rp.RoleId, rp.PermissionId });
+        modelBuilder.Entity<RolePermission>(entity =>
+        {
+            entity.HasKey(e => new { e.RoleId, e.PermissionId });
 
-        modelBuilder.Entity<RolePermission>()
-            .HasOne(rp => rp.Role)
-            .WithMany(r => r.RolePermissions)
-            .HasForeignKey(rp => rp.RoleId);
+            entity.ToTable("RolePermissions");
 
-        modelBuilder.Entity<RolePermission>()
-            .HasOne(rp => rp.Permission)
-            .WithMany(p => p.RolePermissions)
-            .HasForeignKey(rp => rp.PermissionId);
+            entity.HasOne(e => e.Role)
+                .WithMany(r => r.RolePermissions)
+                .HasForeignKey(e => e.RoleId);
+
+            entity.HasOne(e => e.Permission)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(e => e.PermissionId);
+        });
+
 
 
         modelBuilder.Entity<Models.Task>(entity =>

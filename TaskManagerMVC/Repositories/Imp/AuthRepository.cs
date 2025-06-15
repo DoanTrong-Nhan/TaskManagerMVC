@@ -3,7 +3,6 @@ using TaskManagerMVC.Models;
 using TaskManagerMVC.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace TaskManagerMVC.Repositories.Imp
 {
     public class AuthRepository : IAuthRepository
@@ -14,34 +13,32 @@ namespace TaskManagerMVC.Repositories.Imp
         {
             _context = context;
         }
-
-        public User? GetByUsername(string username)
+        public async Task<User?> GetByUsernameAsync(string username)
         {
-            return _context.Users
-                           .Include(u => u.Role)
-                           .ThenInclude(r => r.RolePermissions)
-                           .ThenInclude(rp => rp.Permission)
-                           .FirstOrDefault(u => u.Username == username);
+            return await _context.Users
+                .Include(u => u.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        public User? GetById(int userId)
+        public async Task<User?> GetByIdAsync(int userId)
         {
-            return _context.Users
-                           .Include(u => u.Role)
-                           .ThenInclude(r => r.RolePermissions)
-                           .ThenInclude(rp => rp.Permission)
-                           .FirstOrDefault(u => u.UserId == userId);
+            return await _context.Users
+                .Include(u => u.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
         }
 
-        public bool ExistsByUsername(string username)
+        public async Task<User?> GetByCredentialsAsync(string username, string password)
         {
-            return _context.Users.Any(u => u.Username == username);
+            return await _context.Users
+                .Include(u => u.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(u => u.Username == username && u.PasswordHash == password);
         }
 
-        public void Add(User user)
-        {
-            _context.Users.Add(user);
-            _context.SaveChanges();
-        }
     }
 }

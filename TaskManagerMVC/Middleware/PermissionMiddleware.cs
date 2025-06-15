@@ -16,20 +16,31 @@ namespace TaskManagerMVC.Middleware
         {
             var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
-            if (path.StartsWith("/login") || path.StartsWith("/register"))
+            // ✅ Bỏ qua một số đường dẫn không cần kiểm tra quyền
+            if (path.StartsWith("/login") ||
+                path.StartsWith("/css") ||
+                path.StartsWith("/js") ||
+                path.StartsWith("/lib") ||
+                path.StartsWith("/images") ||
+                path.StartsWith("/favicon") ||
+                path.Contains(".ico") ||
+                path.Contains(".png") ||
+                path.Contains(".jpg") ||
+                path.Contains(".js") ||
+                path.Contains(".css"))
             {
                 await _next(context);
                 return;
             }
 
-            var _authRepository = context.RequestServices.GetRequiredService<IAuthRepository>();
-
+            // ✅ Nếu chưa đăng nhập => để hệ thống tự redirect đến /Login/Index (KHÔNG trả về 401 ở đây)
             if (!context.User.Identity?.IsAuthenticated ?? true)
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await _next(context);
                 return;
             }
 
+            // ✅ Lấy user ID từ claim
             var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
             {
@@ -37,15 +48,17 @@ namespace TaskManagerMVC.Middleware
                 return;
             }
 
-            var user = _authRepository.GetById(userId);
-            if (user?.Role?.RolePermissions == null)
+            // ✅ Lấy user và quyền từ repository
+            var authRepo = context.RequestServices.GetRequiredService<IAuthRepository>();
+            var user = await authRepo.GetByIdAsync(userId);
+            if (user == null)
             {
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
-
+            // ✅ Kiểm tra quyền truy cập endpoint
             var method = context.Request.Method;
-            var endpoint = context.Request.Path.Value?.ToLowerInvariant() ?? "";
+            var endpoint = path;
 
             var hasPermission = user.Role.RolePermissions.Any(rp =>
                 rp.Permission.Method.Equals(method, StringComparison.OrdinalIgnoreCase) &&
@@ -53,10 +66,11 @@ namespace TaskManagerMVC.Middleware
 
             if (!hasPermission)
             {
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.Redirect("/Login/AccessDenied");
                 return;
             }
 
+            // ✅ Có quyền => tiếp tục
             await _next(context);
         }
     }

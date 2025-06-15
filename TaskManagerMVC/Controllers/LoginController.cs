@@ -1,55 +1,78 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TaskManagerMVC.Services.Interfaces;
-using TaskManagerMVC.JWT;
-using TaskManagerMVC.Models;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TaskManagerMVC.Dto.Auth;
+using TaskManagerMVC.Services.Interfaces;
 
 namespace TaskManagerMVC.Controllers
 {
     public class LoginController : Controller
     {
         private readonly IAuthService _authService;
-        private readonly JwtTokenGenerator _jwtTokenGenerator;
 
-        public LoginController(IAuthService authService, JwtTokenGenerator jwtTokenGenerator)
+        public LoginController(IAuthService authService)
         {
             _authService = authService;
-            _jwtTokenGenerator = jwtTokenGenerator;
         }
 
         [HttpGet]
         public IActionResult Index()
         {
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                return RedirectToAction("Task", "ListTask");
+            }
+
             return View();
         }
 
         [HttpPost]
-        public IActionResult Index(LoginDto model)
+        public async Task<IActionResult> Index(LoginDto model)
         {
             if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _authService.ValidateUserAsync(model);
+            if (user == null)
             {
+                ModelState.AddModelError(string.Empty, "Invalid username or password.");
                 return View(model);
             }
 
-            // Gọi Login để lấy token, nếu không hợp lệ thì trả về null hoặc chuỗi rỗng
-            var token = _authService.Login(model.Username, model.Password);
-            if (string.IsNullOrEmpty(token))
+            // Claims setup
+            var claims = new List<Claim>
             {
-                ModelState.AddModelError(string.Empty, "Invalid username or password");
-                return View(model);
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+            };
+
+            if (!string.IsNullOrEmpty(user.Role?.RoleName))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, user.Role.RoleName));
             }
 
-            // Lưu token vào cookie
-            Response.Cookies.Append("jwtToken", token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddHours(_jwtTokenGenerator.ExpiryHours)
-            });
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
             return RedirectToAction("ListTask", "Task");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Login");
+        }
+
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
 
     }

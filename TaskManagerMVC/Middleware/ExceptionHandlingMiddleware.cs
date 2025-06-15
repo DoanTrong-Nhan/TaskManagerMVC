@@ -21,7 +21,7 @@ namespace TaskManagerMVC.Middleware
         {
             try
             {
-                await _next(context); // Gọi middleware tiếp theo
+                await _next(context);
             }
             catch (Exception ex)
             {

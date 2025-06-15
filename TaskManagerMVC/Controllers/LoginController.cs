@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TaskManagerMVC.Dto.Auth;
+using TaskManagerMVC.Helpers; // ✅ THÊM using này
 using TaskManagerMVC.Services.Interfaces;
 
 namespace TaskManagerMVC.Controllers
@@ -40,20 +41,7 @@ namespace TaskManagerMVC.Controllers
                 return View(model);
             }
 
-            // Claims setup
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-            };
-
-            if (!string.IsNullOrEmpty(user.Role?.RoleName))
-            {
-                claims.Add(new Claim(ClaimTypes.Role, user.Role.RoleName));
-            }
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
+            var principal = ClaimsPrincipalFactory.CreatePrincipal(user);
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
@@ -68,12 +56,10 @@ namespace TaskManagerMVC.Controllers
             return RedirectToAction("Index", "Login");
         }
 
-
         [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
         }
-
     }
 }

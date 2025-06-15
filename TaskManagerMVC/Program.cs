@@ -36,13 +36,16 @@ builder.Services.AddDbContext<TaskManagerDbContext>(options =>
 // Đăng ký các services và repositories
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
-
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
 builder.Services.AddScoped<PermissionSeeder>();
 
-builder.Services.AddLogging();
+// Cấu hình logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
+});
 
 var app = builder.Build();
 
@@ -50,7 +53,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<PermissionSeeder>();
-    seeder.SeedPermissions();
+    seeder.SeedPermissions(); // Nên xử lý ngoại lệ ở đây nếu SeedPermissions có thể ném lỗi
 }
 
 // Middleware pipeline
@@ -60,7 +63,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseMiddleware<ExceptionHandlingMiddleware>();
+    app.UseExceptionHandler("/Home/Error"); // Dùng UseExceptionHandler như một fallback
     app.UseHsts();
 }
 
@@ -72,6 +75,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>(); // Di chuyển xuống sau UseAuthorization
 app.UseMiddleware<PermissionMiddleware>();
 
 // Cấu hình định tuyến mặc định

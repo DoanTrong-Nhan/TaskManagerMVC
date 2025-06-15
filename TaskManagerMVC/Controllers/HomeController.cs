@@ -7,8 +7,8 @@ namespace TaskManagerMVC.Controllers
     {
         public IActionResult Error(int statusCode, string message)
         {
-            ViewBag.StatusCode = statusCode;
-            ViewBag.Message = string.IsNullOrEmpty(message) ? "Có lỗi xảy ra. Vui lòng thử lại." : message;
+            ViewData["StatusCode"] = statusCode;
+            ViewData["Message"] = message;
             return View();
         }
     }

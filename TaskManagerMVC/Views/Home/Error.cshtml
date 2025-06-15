@@ -1,11 +1,8 @@
-﻿@* Views/Home/Error.cshtml *@
+﻿@model dynamic
 @{
     ViewData["Title"] = "Error";
 }
 
-<h1>Lỗi</h1>
-<div class="alert alert-danger">
-    <h4>Mã lỗi: @ViewBag.StatusCode</h4>
-    <p>@ViewBag.Message</p>
-    <a href="@Url.Action("ListTask", "Task")" class="btn btn-primary">Quay lại danh sách Task</a>
-</div>
+<h1>Error @ViewData["StatusCode"]</h1>
+<p>@ViewData["Message"]</p>
+<a href="/Task/ListTask">Return to Home</a>

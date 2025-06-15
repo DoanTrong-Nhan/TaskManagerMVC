@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Threading.Tasks;
 using System.Net;
+using System.Threading.Tasks;
+using System.Web;
 
 namespace TaskManagerMVC.Middleware
 {
@@ -13,8 +14,8 @@ namespace TaskManagerMVC.Middleware
 
         public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
         {
-            _next = next;
-            _logger = logger;
+            _next = next ?? throw new ArgumentNullException(nameof(next));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -25,21 +26,29 @@ namespace TaskManagerMVC.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception occurred");
-
-                // Chuyển hướng đến action Error trong HomeController
-                context.Response.Redirect($"/Home/Error?statusCode={GetStatusCode(ex)}&message={Uri.EscapeDataString(ex.Message)}");
+                await HandleExceptionAsync(context, ex);
             }
         }
 
-        private int GetStatusCode(Exception ex)
+        private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
-            return ex switch
-            {
-                UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
-                KeyNotFoundException => StatusCodes.Status404NotFound,
-                _ => StatusCodes.Status500InternalServerError
-            };
+            _logger.LogError(ex, "An unhandled exception occurred in the application.");
+
+            var (statusCode, message) = GetErrorResponse(ex);
+            var encodedMessage = HttpUtility.UrlEncode(message);
+
+            // Chuyển hướng đến action Error trong HomeController
+            context.Response.Redirect($"/Home/Error?statusCode={statusCode}&message={encodedMessage}");
         }
+
+        private (int StatusCode, string Message) GetErrorResponse(Exception ex) => ex switch
+        {
+            ArgumentNullException ane => (StatusCodes.Status400BadRequest, $"Invalid request: {ane.Message}"),
+            ArgumentException ae => (StatusCodes.Status400BadRequest, $"Invalid request: {ae.Message}"),
+            KeyNotFoundException knfe => (StatusCodes.Status404NotFound, knfe.Message),
+            UnauthorizedAccessException uae => (StatusCodes.Status401Unauthorized, $"Unauthorized access: {uae.Message}"),
+            InvalidOperationException ioe => (StatusCodes.Status500InternalServerError, $"Server error: {ioe.Message}"),
+            _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.")
+        };
     }
 }

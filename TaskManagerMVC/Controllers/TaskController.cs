@@ -43,8 +43,7 @@ namespace TaskManagerMVC.Controllers
             }
 
             await _taskService.CreateTaskAsync(dto);
-            TempData["SuccessMessage"] = "Task đã được tạo thành công!";
-            return RedirectToAction("ListTask");
+            return RedirectToAction(nameof(Index));
         }
 
         // Form cập nhật task
@@ -52,7 +51,7 @@ namespace TaskManagerMVC.Controllers
         public async Task<IActionResult> Update(int id)
         {
             var dto = await _taskService.GetTaskForUpdateAsync(id);
-            ViewBag.TaskId = id; // Lưu TaskId vào ViewBag cho modal xóa
+            ViewBag.TaskId = id; 
             await LoadDropdowns();
             return View(dto);
         }
@@ -64,14 +63,13 @@ namespace TaskManagerMVC.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.TaskId = id; // Lưu TaskId vào ViewBag nếu validation thất bại
+                ViewBag.TaskId = id;
                 await LoadDropdowns();
                 return View(dto);
             }
 
             await _taskService.UpdateTaskAsync(id, dto);
-            TempData["SuccessMessage"] = "Task đã được cập nhật thành công!";
-            return RedirectToAction("ListTask");
+            return RedirectToAction(nameof(Index));
         }
         // Action để xóa Task
         [HttpPost]
@@ -80,8 +78,7 @@ namespace TaskManagerMVC.Controllers
         {
             var dto = new DeleteTaskDto { TaskId = id };
             await _taskService.DeleteTaskAsync(dto);
-            TempData["SuccessMessage"] = "Task đã được xóa thành công!";
-            return RedirectToAction("ListTask");
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -89,15 +86,13 @@ namespace TaskManagerMVC.Controllers
         {
             var tasks = await _taskService.GetFilteredTasks(title, statusId, priorityId);
 
-            // Giữ lại giá trị đã chọn để hiển thị lại trên giao diện
             ViewBag.SelectedTitle = title;
             ViewBag.SelectedStatusId = statusId;
             ViewBag.SelectedPriorityId = priorityId;
 
-            await LoadDropdowns(); // để hiển thị dropdown filter
-            return View("ListTask", tasks); // Dùng lại view ListTask để hiển thị kết quả tìm kiếm
+            await LoadDropdowns();
+            return View("ListTask", tasks); 
         }
-
 
         private async Task LoadDropdowns()
         {

@@ -14,135 +14,208 @@ namespace TaskManagerMVC.Repositories.Imp
 
         public TaskRepository(TaskManagerDbContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public async Task<List<Models.Task>> GetAllWithRelationsAsync()
         {
-            return await _context.Tasks
-                .Include(t => t.Priority)
-                .Include(t => t.Status)
-                .Include(t => t.User)
-                .ToListAsync();
+            try
+            {
+                return await _context.Tasks
+                    .Include(t => t.Priority)
+                    .Include(t => t.Status)
+                    .Include(t => t.User)
+                    .ToListAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to retrieve tasks with relations.", ex);
+            }
         }
+
         public async Task<Models.Task?> GetByIdAsync(int id)
         {
-            return await _context.Tasks
-                .Include(t => t.Status)
-                .Include(t => t.Priority)
-                .Include(t => t.User)
-                .FirstOrDefaultAsync(t => t.TaskId == id);
-        }
+            if (id <= 0)
+                throw new ArgumentException("Task ID must be greater than zero.", nameof(id));
 
-        public async System.Threading.Tasks.Task UpdateAsync(Models.Task task)
-        {
-            _context.Tasks.Update(task);
+            try
+            {
+                var task = await _context.Tasks
+                    .Include(t => t.Status)
+                    .Include(t => t.Priority)
+                    .Include(t => t.User)
+                    .FirstOrDefaultAsync(t => t.TaskId == id);
 
-            await System.Threading.Tasks.Task.CompletedTask;
+                return task;
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException($"Failed to retrieve task with ID {id}.", ex);
+            }
         }
 
         public async System.Threading.Tasks.Task AddAsync(Models.Task task)
         {
-            await _context.Tasks.AddAsync(task);
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
+
+            try
+            {
+                await _context.Tasks.AddAsync(task);
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to add task.", ex);
+            }
         }
 
-        public async System.Threading.Tasks.Task SaveChangesAsync()
+        public async System.Threading.Tasks.Task UpdateAsync(Models.Task task)
         {
-            await _context.SaveChangesAsync();
-        }
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
 
-        public async Task<IEnumerable<Models.TaskStatus>> GetAllStatusesAsync()
-        {
-            return await _context.TaskStatuses.AsNoTracking().ToListAsync();
-        }
-
-        public async Task<IEnumerable<TaskPriority>> GetAllPrioritiesAsync()
-        {
-            return await _context.TaskPriorities.AsNoTracking().ToListAsync();
-        }
-
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
-        {
-            return await _context.Users.AsNoTracking().ToListAsync();
+            try
+            {
+                _context.Tasks.Update(task);
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to update task.", ex);
+            }
         }
 
         public async System.Threading.Tasks.Task DeleteAsync(int id)
         {
-            var task = await _context.Tasks
-                .Include(t => t.TaskComments)
-                .FirstOrDefaultAsync(t => t.TaskId == id);
-            if (task != null)
+            if (id <= 0)
+                throw new ArgumentException("Task ID must be greater than zero.", nameof(id));
+
+            try
             {
+                var task = await _context.Tasks
+                    .Include(t => t.TaskComments)
+                    .FirstOrDefaultAsync(t => t.TaskId == id);
+
+                if (task == null)
+                    throw new KeyNotFoundException($"Task with ID {id} not found.");
+
                 _context.TaskComments.RemoveRange(task.TaskComments);
                 _context.Tasks.Remove(task);
                 await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException($"Failed to delete task with ID {id}.", ex);
+            }
+        }
+
+        public async System.Threading.Tasks.Task SaveChangesAsync()
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                throw new InvalidOperationException("Concurrency error occurred while saving changes.", ex);
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to save changes to the database.", ex);
+            }
+        }
+
+        public async Task<IEnumerable<Models.TaskStatus>> GetAllStatusesAsync()
+        {
+            try
+            {
+                return await _context.TaskStatuses.AsNoTracking().ToListAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to retrieve task statuses.", ex);
+            }
+        }
+
+        public async Task<IEnumerable<TaskPriority>> GetAllPrioritiesAsync()
+        {
+            try
+            {
+                return await _context.TaskPriorities.AsNoTracking().ToListAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to retrieve task priorities.", ex);
+            }
+        }
+
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            try
+            {
+                return await _context.Users.AsNoTracking().ToListAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to retrieve users.", ex);
             }
         }
 
         public async Task<List<TaskDto>> GetFilteredTasksAsync(string? title, int? statusId, int? priorityId)
         {
             var taskDtos = new List<TaskDto>();
-
-            // Lấy kết nối từ DbContext
             var connection = _context.Database.GetDbConnection();
 
             try
             {
-                // Mở kết nối nếu chưa mở
-                if (connection.State != ConnectionState.Open)
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "sp_FilterTasks";
+                command.CommandType = CommandType.StoredProcedure;
+
+                command.Parameters.Add(new SqlParameter(SqlConstants.ParamTitle, title ?? (object)DBNull.Value));
+                command.Parameters.Add(new SqlParameter(SqlConstants.ParamStatusId, statusId ?? (object)DBNull.Value));
+                command.Parameters.Add(new SqlParameter(SqlConstants.ParamPriorityId, priorityId ?? (object)DBNull.Value));
+
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
                 {
-                    await connection.OpenAsync();
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "sp_FilterTasks";
-                    command.CommandType = CommandType.StoredProcedure;
-
-                    // Thêm tham số
-                    command.Parameters.Add(new SqlParameter(SqlConstants.ParamTitle, title ?? (object)DBNull.Value));
-                    command.Parameters.Add(new SqlParameter(SqlConstants.ParamStatusId, statusId ?? (object)DBNull.Value));
-                    command.Parameters.Add(new SqlParameter(SqlConstants.ParamPriorityId, priorityId ?? (object)DBNull.Value));
-
-                    await using (var reader = await command.ExecuteReaderAsync())
+                    taskDtos.Add(new TaskDto
                     {
-                        while (await reader.ReadAsync())
-                        {
-                            var dto = new TaskDto
-                            {
-                                TaskId = reader.GetInt32(reader.GetOrdinal(SqlConstants.ColTaskId)),
-                                Title = reader.GetString(reader.GetOrdinal(SqlConstants.ColTitle)),
-                                Description = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColDescription)) ? null : reader.GetString(reader.GetOrdinal(SqlConstants.ColDescription)),
-
-                                StartDate = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColStartDate)) ? null : reader.GetDateTime(reader.GetOrdinal(SqlConstants.ColStartDate)).ToString("yyyy-MM-dd HH:mm:ss"),
-                                DueDate = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColDueDate)) ? null : reader.GetDateTime(reader.GetOrdinal(SqlConstants.ColDueDate)).ToString("yyyy-MM-dd HH:mm:ss"),
-
-                                StatusName = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColStatusName)) ? null : reader.GetString(reader.GetOrdinal(SqlConstants.ColStatusName)),
-                                PriorityName = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColPriorityName)) ? null : reader.GetString(reader.GetOrdinal(SqlConstants.ColPriorityName)),
-                                UserFullName = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColUserFullName)) ? null : reader.GetString(reader.GetOrdinal(SqlConstants.ColUserFullName)),
-                            };
-
-                            taskDtos.Add(dto);
-                        }
-                    }
+                        TaskId = reader.GetInt32(reader.GetOrdinal(SqlConstants.ColTaskId)),
+                        Title = reader.GetString(reader.GetOrdinal(SqlConstants.ColTitle)),
+                        Description = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColDescription))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(SqlConstants.ColDescription)),
+                        StartDate = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColStartDate))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal(SqlConstants.ColStartDate)).ToString("yyyy-MM-dd HH:mm:ss"),
+                        DueDate = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColDueDate))
+                            ? null
+                            : reader.GetDateTime(reader.GetOrdinal(SqlConstants.ColDueDate)).ToString("yyyy-MM-dd HH:mm:ss"),
+                        StatusName = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColStatusName))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(SqlConstants.ColStatusName)),
+                        PriorityName = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColPriorityName))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(SqlConstants.ColPriorityName)),
+                        UserFullName = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColUserFullName))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(SqlConstants.ColUserFullName)),
+                    });
                 }
             }
             catch (SqlException ex)
             {
-                throw new InvalidOperationException("Lỗi khi thực thi stored procedure 'sp_FilterTasks'.", ex);
+                throw new InvalidOperationException("Failed to execute stored procedure 'sp_FilterTasks'.", ex);
             }
             finally
             {
-                // Đóng kết nối nếu cần
                 if (connection.State == ConnectionState.Open)
-                {
                     await connection.CloseAsync();
-                }
             }
 
             return taskDtos;
         }
-
     }
-
 }

@@ -3,8 +3,10 @@ using TaskManagerAPI.Validate;
 
 namespace TaskManagerAPI.Dtos
 {
+    [DateRangeValidation("StartDate", "DueDate", ErrorMessage = "StartDate must be earlier than or equal to DueDate.")]
     public class TaskUpdateDto
     {
+
         [Required(ErrorMessage = "Title is required.")]
         [StringLength(100, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 100 characters.")]
         public string Title { get; set; } = string.Empty;

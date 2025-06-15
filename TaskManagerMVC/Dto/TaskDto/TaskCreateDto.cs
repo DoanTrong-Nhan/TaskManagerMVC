@@ -3,6 +3,7 @@ using TaskManagerAPI.Validate;
 
 namespace TaskManagerAPI.Dtos
 {
+    [DateRangeValidation("StartDate", "DueDate", ErrorMessage = "StartDate must be earlier than or equal to DueDate.")]
     public class TaskCreateDto
     {
         [Required(ErrorMessage = "Title is required.")]

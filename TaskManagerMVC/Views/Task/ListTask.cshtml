@@ -1,11 +1,16 @@
 ﻿@model List<TaskManagerAPI.Dtos.TaskDto>
+@inject TaskManagerMVC.Services.Interfaces.IAuthService PermissionService
+
 
 
 @{
     ViewData["Title"] = "Task List";
 }
 
-<a asp-action="CreateTask" class="btn btn-primary m-2">+ Add new</a>
+@if ((bool)(ViewBag.CanCreate ?? false))
+{
+    <a asp-action="CreateTask" class="btn btn-primary m-2">+ Add new</a>
+}
 
 <!-- Filters Form -->
 <form method="get" asp-action="Search">

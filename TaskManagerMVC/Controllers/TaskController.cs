@@ -9,16 +9,22 @@ namespace TaskManagerMVC.Controllers
     public class TaskController : Controller
     {
         private readonly ITaskService _taskService;
+        private readonly IAuthService _authService;
 
-        public TaskController(ITaskService taskService)
+        public TaskController(ITaskService taskService, IAuthService authService)
         {
             _taskService = taskService;
+            _authService = authService;
         }
 
         // Hiển thị danh sách Task
         public async Task<IActionResult> ListTask()
         {
             var tasks = await _taskService.GetAllTasksAsync();
+
+            var canCreate = await _authService.HasPermissionAsync(User, "GET", "/task/createtask");
+            ViewBag.CanCreate = canCreate;
+
             await LoadDropdowns();
             return View(tasks);
         }

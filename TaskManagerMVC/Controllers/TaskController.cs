@@ -49,7 +49,7 @@ namespace TaskManagerMVC.Controllers
             }
 
             await _taskService.CreateTaskAsync(dto);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(ListTask));
         }
 
         // Form cập nhật task
@@ -75,7 +75,7 @@ namespace TaskManagerMVC.Controllers
             }
 
             await _taskService.UpdateTaskAsync(id, dto);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(ListTask));
         }
         // Action để xóa Task
         [HttpPost]
@@ -84,7 +84,7 @@ namespace TaskManagerMVC.Controllers
         {
             var dto = new DeleteTaskDto { TaskId = id };
             await _taskService.DeleteTaskAsync(dto);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(ListTask));
         }
 
         [HttpGet]

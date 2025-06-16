@@ -17,28 +17,29 @@ namespace TaskManagerMVC.Middleware
             var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
             // ✅ Bỏ qua một số đường dẫn không cần kiểm tra quyền
-            if (path.StartsWith("/login") ||
-                path.StartsWith("/css") ||
-                path.StartsWith("/js") ||
-                path.StartsWith("/lib") ||
-                path.StartsWith("/images") ||
-                path.StartsWith("/favicon") ||
-                path.Contains(".ico") ||
-                path.Contains(".png") ||
-                path.Contains(".jpg") ||
-                path.Contains(".js") ||
-                path.Contains(".css"))
+            if (path.StartsWith("/login"))
             {
                 await _next(context);
                 return;
             }
 
-            // ✅ Nếu chưa đăng nhập => để hệ thống tự redirect đến /Login/Index (KHÔNG trả về 401 ở đây)
+            // Nếu chưa đăng nhập
             if (!context.User.Identity?.IsAuthenticated ?? true)
             {
-                await _next(context);
+                // Cho phép truy cập các file tĩnh và trang login
+                if (path.StartsWith("/login") ||
+                    context.Request.Method == "POST") 
+                {
+                    await _next(context);
+                    return;
+                }
+
+                // Chặn tất cả các trang khác
+                context.Response.Redirect("/Login/Index");
                 return;
             }
+
+
 
             // ✅ Lấy user ID từ claim
             var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);

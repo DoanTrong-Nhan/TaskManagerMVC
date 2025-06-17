@@ -57,7 +57,7 @@ namespace TaskManagerMVC.Controllers
         }
 
         [HttpGet]
-        public IActionResult AccessDenied()
+        public IActionResult NotFound()
         {
             return View();
         }

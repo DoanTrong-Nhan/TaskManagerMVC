@@ -1,7 +1,8 @@
-﻿namespace TaskManagerAPI.Validate
+﻿namespace TaskManagerMVC.Helper
 {
     public static class DateHelper
     {
+        // Date time  DTO to Model
         public static string? ToDisplayDate(DateTime? date)
         {
             return date?.ToString("dd/MM/yyyy");

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
-using TaskManagerAPI.Dtos;
-using TaskManagerAPI.Validate;
+using TaskManagerMVC.Dtos;
 using TaskManagerMVC.Dto.TaskDto;
+using TaskManagerMVC.Helper;
 using TaskManagerMVC.Models;
 using TaskManagerMVC.Repositories.Interfaces;
 using TaskManagerMVC.Services.Interfaces;
@@ -28,8 +28,6 @@ namespace TaskManagerMVC.Services.Imp
         {
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
-
-            ValidateTaskDto(dto);
 
             var task = new Models.Task(dto.Title)
             {
@@ -71,8 +69,6 @@ namespace TaskManagerMVC.Services.Imp
                 throw new ArgumentException("Task ID must be greater than zero.", nameof(id));
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
-
-            ValidateTaskDto(dto);
 
             var task = await _taskRepository.GetByIdAsync(id);
             if (task == null)
@@ -148,21 +144,6 @@ namespace TaskManagerMVC.Services.Imp
                 StatusName = task.Status?.StatusName,
                 UserFullName = task.User?.FullName
             };
-        }
-
-        private static void ValidateTaskDto(dynamic dto)
-        {
-            if (string.IsNullOrWhiteSpace(dto.Title))
-                throw new ArgumentException("Task title cannot be empty.", nameof(dto.Title));
-
-            if (dto.StatusId <= 0)
-                throw new ArgumentException("Status ID must be greater than zero.", nameof(dto.StatusId));
-
-            if (dto.PriorityId <= 0)
-                throw new ArgumentException("Priority ID must be greater than zero.", nameof(dto.PriorityId));
-
-            if (dto.UserId <= 0)
-                throw new ArgumentException("User ID must be greater than zero.", nameof(dto.UserId));
         }
     }
 }

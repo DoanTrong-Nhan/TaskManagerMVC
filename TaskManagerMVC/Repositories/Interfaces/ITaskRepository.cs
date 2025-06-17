@@ -1,4 +1,4 @@
-﻿using TaskManagerAPI.Dtos;
+﻿using TaskManagerMVC.Dtos;
 using TaskManagerMVC.Models;
 
 namespace TaskManagerMVC.Repositories.Interfaces

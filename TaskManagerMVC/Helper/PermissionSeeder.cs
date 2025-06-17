@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using TaskManagerMVC.DBContext;
 using TaskManagerMVC.Models;
 
-namespace TaskManagerMVC.Scanner
+namespace TaskManagerMVC.Helper
 {
     public class PermissionSeeder
     {

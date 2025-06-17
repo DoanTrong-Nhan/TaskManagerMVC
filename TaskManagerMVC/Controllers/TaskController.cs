@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using TaskManagerAPI.Dtos;
+using TaskManagerMVC.Dtos;
 using TaskManagerMVC.Dto.TaskDto;
+using TaskManagerMVC.Helper;
 using TaskManagerMVC.Services.Interfaces;
 
 namespace TaskManagerMVC.Controllers
@@ -17,12 +18,15 @@ namespace TaskManagerMVC.Controllers
             _authService = authService;
         }
 
-        // Hiển thị danh sách Task
+
         public async Task<IActionResult> ListTask()
         {
             var tasks = await _taskService.GetAllTasksAsync();
 
-            var canCreate = await _authService.HasPermissionAsync(User, "GET", "/task/createtask");
+            var canCreate = await _authService.HasPermissionAsync(User,
+                            PermissionConstants.CreateTaskMethod,
+                            PermissionConstants.CreateTaskEndpoint);
+
             ViewBag.CanCreate = canCreate;
 
             await LoadDropdowns();
@@ -34,6 +38,7 @@ namespace TaskManagerMVC.Controllers
         public async Task<IActionResult> CreateTask()
         {
             await LoadDropdowns();
+
             return View();
         }
 
@@ -57,7 +62,19 @@ namespace TaskManagerMVC.Controllers
         public async Task<IActionResult> Update(int id)
         {
             var dto = await _taskService.GetTaskForUpdateAsync(id);
-            ViewBag.TaskId = id; 
+
+            var canUpdate = await _authService.HasPermissionAsync(User,
+                      PermissionConstants.UpdateTaskMethod,
+                      PermissionConstants.UpdateTaskEndpoint);
+
+            var canDelete = await _authService.HasPermissionAsync(User,
+                                PermissionConstants.DeleteTaskMethod,
+                                PermissionConstants.DeleteTaskEndpoint);
+
+            ViewBag.CanUpdate = canUpdate;
+            ViewBag.CanDelete = canDelete;
+
+            ViewBag.TaskId = id;
             await LoadDropdowns();
             return View(dto);
         }
@@ -70,6 +87,8 @@ namespace TaskManagerMVC.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.TaskId = id;
+
+
                 await LoadDropdowns();
                 return View(dto);
             }
@@ -83,10 +102,16 @@ namespace TaskManagerMVC.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var dto = new DeleteTaskDto { TaskId = id };
+            var canDelete = await _authService.HasPermissionAsync(User,
+                      PermissionConstants.DeleteTaskMethod,
+                      PermissionConstants.DeleteTaskEndpoint);
+            ViewBag.CanDelete = canDelete;
+
             await _taskService.DeleteTaskAsync(dto);
             return RedirectToAction(nameof(ListTask));
         }
 
+        //Action to Search
         [HttpGet]
         public async Task<IActionResult> Search(string? title, int? statusId, int? priorityId)
         {
@@ -97,9 +122,10 @@ namespace TaskManagerMVC.Controllers
             ViewBag.SelectedPriorityId = priorityId;
 
             await LoadDropdowns();
-            return View("ListTask", tasks); 
+            return View("ListTask", tasks);
         }
 
+        // Load dropdowns for status, priority, and user
         private async Task LoadDropdowns()
         {
             var statuses = await _taskService.GetStatusListAsync();

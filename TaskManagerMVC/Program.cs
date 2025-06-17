@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using TaskManagerMVC.DBContext;
+using TaskManagerMVC.Helper;
 using TaskManagerMVC.Middleware;
 using TaskManagerMVC.Repositories.Imp;
 using TaskManagerMVC.Repositories.Interfaces;
-using TaskManagerMVC.Scanner;
 using TaskManagerMVC.Services.Imp;
 using TaskManagerMVC.Services.Interfaces;
 
@@ -51,11 +51,10 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
-// Seed quyền khi khởi chạy
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<PermissionSeeder>();
-    seeder.SeedPermissions(); // Nên xử lý ngoại lệ ở đây nếu SeedPermissions có thể ném lỗi
+    seeder.SeedPermissions(); 
 }
 
 // Middleware pipeline
@@ -65,7 +64,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error"); // Dùng UseExceptionHandler như một fallback
+    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
@@ -77,7 +76,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>(); // Di chuyển xuống sau UseAuthorization
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<PermissionMiddleware>();
 
 // Cấu hình định tuyến mặc định

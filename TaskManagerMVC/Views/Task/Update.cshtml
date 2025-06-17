@@ -1,7 +1,10 @@
-﻿@model TaskManagerAPI.Dtos.TaskUpdateDto
+﻿@model TaskManagerMVC.Dtos.TaskUpdateDto
+
 
 @{
     ViewData["Title"] = "Update Task";
+    var canUpdate = (bool)(ViewBag.CanUpdate ?? false);
+    var canDelete = (bool)(ViewBag.CanDelete ?? false);
 }
 
 <h2>Update Task</h2>
@@ -62,9 +65,15 @@
         <span asp-validation-for="UserId" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Update</button>
+    @if (canUpdate)
+    {
+        <button type="submit" class="btn btn-primary">Update</button>
+    }
     <a href="@Url.Action("ListTask", "Task")" class="btn btn-secondary">Cancel</a>
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+    @if (canDelete)
+    {
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+    }
 </form>
 
 

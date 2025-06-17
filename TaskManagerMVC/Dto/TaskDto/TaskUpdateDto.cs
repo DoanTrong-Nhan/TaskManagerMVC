@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using TaskManagerAPI.Validate;
+using TaskManagerMVC.Helper;
 
-namespace TaskManagerAPI.Dtos
+namespace TaskManagerMVC.Dtos
 {
     [DateRangeValidation("StartDate", "DueDate", ErrorMessage = "StartDate must be earlier than or equal to DueDate.")]
     public class TaskUpdateDto

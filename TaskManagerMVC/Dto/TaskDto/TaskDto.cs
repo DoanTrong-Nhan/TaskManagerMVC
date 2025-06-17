@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using TaskManagerAPI.Validate;
+using TaskManagerMVC.Helper;
 
-namespace TaskManagerAPI.Dtos
+namespace TaskManagerMVC.Dtos
 {
     public class TaskDto
     {

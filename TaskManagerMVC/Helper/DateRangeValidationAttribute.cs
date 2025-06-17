@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 
-namespace TaskManagerAPI.Validate
+namespace TaskManagerMVC.Helper
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class DateRangeValidationAttribute : ValidationAttribute
@@ -32,7 +32,7 @@ namespace TaskManagerAPI.Validate
             string dueStr = dueProp.GetValue(validationContext.ObjectInstance) as string;
 
             if (string.IsNullOrWhiteSpace(startStr) || string.IsNullOrWhiteSpace(dueStr))
-                return ValidationResult.Success; // Không bắt buộc nếu 1 trong 2 là null
+                return ValidationResult.Success;
 
             if (DateTime.TryParseExact(startStr, _format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate) &&
                 DateTime.TryParseExact(dueStr, _format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dueDate))

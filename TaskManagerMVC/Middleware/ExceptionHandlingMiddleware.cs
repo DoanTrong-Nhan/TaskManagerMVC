@@ -41,6 +41,7 @@ namespace TaskManagerMVC.Middleware
             context.Response.Redirect($"/Home/Error?statusCode={statusCode}&message={encodedMessage}");
         }
 
+        // Generate a standardized error response based on the exception type
         private (int StatusCode, string Message) GetErrorResponse(Exception ex) => ex switch
         {
             ArgumentNullException ane => (StatusCodes.Status400BadRequest, $"Invalid request: {ane.Message}"),

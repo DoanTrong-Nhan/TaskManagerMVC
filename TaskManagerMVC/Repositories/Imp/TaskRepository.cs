@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
-using TaskManagerAPI.Dtos;
+using TaskManagerMVC.Dtos;
 using TaskManagerMVC.DBContext;
 using TaskManagerMVC.Models;
 using TaskManagerMVC.Repositories.Interfaces;

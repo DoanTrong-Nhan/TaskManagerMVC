@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using TaskManagerMVC.Helper;
 using TaskManagerMVC.Repositories.Interfaces;
 
 namespace TaskManagerMVC.Middleware
@@ -12,12 +13,13 @@ namespace TaskManagerMVC.Middleware
             _next = next;
         }
 
+
         public async Task Invoke(HttpContext context)
         {
             var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
             // ✅ Bỏ qua một số đường dẫn không cần kiểm tra quyền
-            if (path.StartsWith("/login"))
+            if (path.StartsWith(PermissionConstants.WhitelistEndpoints))
             {
                 await _next(context);
                 return;
@@ -27,7 +29,7 @@ namespace TaskManagerMVC.Middleware
             if (!context.User.Identity?.IsAuthenticated ?? true)
             {
                 // Cho phép truy cập các file tĩnh và trang login
-                if (path.StartsWith("/login") ||
+                if (path.StartsWith(PermissionConstants.WhitelistEndpoints) ||
                     context.Request.Method == "POST") 
                 {
                     await _next(context);
@@ -35,7 +37,7 @@ namespace TaskManagerMVC.Middleware
                 }
 
                 // Chặn tất cả các trang khác
-                context.Response.Redirect("/Login/Index");
+                context.Response.Redirect(PermissionConstants.LoginConst);
                 return;
             }
 
@@ -62,12 +64,13 @@ namespace TaskManagerMVC.Middleware
             var endpoint = path;
 
             var hasPermission = user.Role.RolePermissions.Any(rp =>
-                rp.Permission.Method.Equals(method, StringComparison.OrdinalIgnoreCase) &&
-                endpoint.Contains(rp.Permission.Endpoint, StringComparison.OrdinalIgnoreCase));
+     rp.Permission.Method.Equals(method, StringComparison.OrdinalIgnoreCase) &&
+     endpoint.StartsWith(rp.Permission.Endpoint, StringComparison.OrdinalIgnoreCase));
+
 
             if (!hasPermission)
             {
-                context.Response.Redirect("/Login/AccessDenied");
+                context.Response.Redirect(PermissionConstants.AccessDenied);
                 return;
             }
 

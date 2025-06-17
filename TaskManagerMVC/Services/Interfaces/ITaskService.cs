@@ -1,7 +1,7 @@
 ﻿namespace TaskManagerMVC.Services.Interfaces
 {
     using Microsoft.AspNetCore.Mvc.Rendering;
-    using TaskManagerAPI.Dtos;
+    using TaskManagerMVC.Dtos;
     using TaskManagerMVC.Dto.TaskDto;
 
     public interface ITaskService

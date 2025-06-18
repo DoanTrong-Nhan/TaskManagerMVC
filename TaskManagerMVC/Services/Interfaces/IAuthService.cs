@@ -9,5 +9,9 @@ namespace TaskManagerMVC.Services.Interfaces
         Task<User?> ValidateUserAsync(LoginDto loginDto);
 
         Task<bool> HasPermissionAsync(ClaimsPrincipal user, string method, string endpoint);
+
+        // Authorziration
+        int GetCurrentUserId(ClaimsPrincipal user);
+        Task<int> GetUserRoleIdAsync(ClaimsPrincipal user);
     }
 }

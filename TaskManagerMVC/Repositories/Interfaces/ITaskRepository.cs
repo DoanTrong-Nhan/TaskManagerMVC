@@ -5,7 +5,7 @@ namespace TaskManagerMVC.Repositories.Interfaces
 {
     public interface ITaskRepository
     {
-        Task<List<Models.Task>> GetAllWithRelationsAsync();
+        Task<List<Models.Task>> GetAllWithRelationsAsync(int? userId = null);
 
         Task<Models.Task?> GetByIdAsync(int id);
         System.Threading.Tasks.Task UpdateAsync(Models.Task task);
@@ -19,7 +19,7 @@ namespace TaskManagerMVC.Repositories.Interfaces
         System.Threading.Tasks.Task DeleteAsync(int id);
 
         /// Lọc danh sách task theo tiêu đề, trạng thái, và độ ưu tiên.
-        Task<List<TaskDto>> GetFilteredTasksAsync(string? title, int? statusId, int? priorityId);
+        Task<List<TaskDto>> GetFilteredTasksAsync(string? title, int? statusId, int? priorityId, int? userId = null);
     }
 
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using TaskManagerMVC.Dto.Auth;
 using TaskManagerMVC.Models;
@@ -51,6 +52,21 @@ namespace TaskManagerMVC.Services.Imp
             }
 
             return permissions;
+        }
+
+        public int GetCurrentUserId(ClaimsPrincipal user)
+        {
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
+
+        public async Task<int> GetUserRoleIdAsync(ClaimsPrincipal user)
+        {
+            var appUser = await _authRepository.GetUserAsync(user);
+            if (appUser == null || appUser.Role == null)
+                return 0;
+
+            return appUser.Role.RoleId; // Lấy trực tiếp RoleId từ user.Role
         }
 
     }

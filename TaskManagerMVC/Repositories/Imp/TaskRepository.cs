@@ -17,15 +17,22 @@ namespace TaskManagerMVC.Repositories.Imp
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<List<Models.Task>> GetAllWithRelationsAsync()
+        public async Task<List<Models.Task>> GetAllWithRelationsAsync(int? userId = null)
         {
             try
             {
-                return await _context.Tasks
+                var query = _context.Tasks
                     .Include(t => t.Priority)
                     .Include(t => t.Status)
                     .Include(t => t.User)
-                    .ToListAsync();
+                    .AsQueryable(); // Đảm bảo query là IQueryable<Task>
+
+                if (userId.HasValue)
+                {
+                    query = query.Where(t => t.UserId == userId.Value);
+                }
+
+                return await query.ToListAsync();
             }
             catch (DbUpdateException ex)
             {
@@ -160,7 +167,7 @@ namespace TaskManagerMVC.Repositories.Imp
             }
         }
 
-        public async Task<List<TaskDto>> GetFilteredTasksAsync(string? title, int? statusId, int? priorityId)
+        public async Task<List<TaskDto>> GetFilteredTasksAsync(string? title, int? statusId, int? priorityId, int? userId = null)
         {
             var taskDtos = new List<TaskDto>();
             var connection = _context.Database.GetDbConnection();
@@ -176,6 +183,7 @@ namespace TaskManagerMVC.Repositories.Imp
                 command.Parameters.Add(new SqlParameter(SqlConstants.ParamTitle, title ?? (object)DBNull.Value));
                 command.Parameters.Add(new SqlParameter(SqlConstants.ParamStatusId, statusId ?? (object)DBNull.Value));
                 command.Parameters.Add(new SqlParameter(SqlConstants.ParamPriorityId, priorityId ?? (object)DBNull.Value));
+                command.Parameters.Add(new SqlParameter(SqlConstants.ParamUserId, userId ?? (object)DBNull.Value));
 
                 await using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())

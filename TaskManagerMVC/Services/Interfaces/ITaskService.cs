@@ -6,7 +6,7 @@
 
     public interface ITaskService
     {
-        Task<List<TaskDto>> GetAllTasksAsync();
+        Task<List<TaskDto>> GetAllTasksAsync(int? userId = null);
         Task<TaskUpdateDto> GetTaskForUpdateAsync(int id);
         Task CreateTaskAsync(TaskCreateDto dto);
         Task UpdateTaskAsync(int id, TaskUpdateDto dto);
@@ -24,7 +24,7 @@
         /// <param name="statusId">ID trạng thái (tuỳ chọn)</param>
         /// <param name="priorityId">ID độ ưu tiên (tuỳ chọn)</param>
         /// <returns>Danh sách TaskDto đã lọc</returns>
-        Task<List<TaskDto>> GetFilteredTasks(string? title, int? statusId, int? priorityId);
+        Task<List<TaskDto>> GetFilteredTasks(string? title, int? statusId, int? priorityId, int? userId = null);
     }
 
 }

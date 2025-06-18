@@ -12,6 +12,7 @@ namespace TaskManagerMVC
         public const string ParamTitle = "@Title";
         public const string ParamStatusId = "@StatusId";
         public const string ParamPriorityId = "@PriorityId";
+        public const string ParamUserId = "@UserId";
 
         // Column names in result set
         public const string ColTaskId = "TaskId";

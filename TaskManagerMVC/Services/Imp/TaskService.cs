@@ -18,9 +18,16 @@ namespace TaskManagerMVC.Services.Imp
             _taskRepository = taskRepository ?? throw new ArgumentNullException(nameof(taskRepository));
         }
 
-        public async Task<List<TaskDto>> GetAllTasksAsync()
+        public async Task<List<TaskDto>> GetAllTasksAsync(int? userId = null)
         {
             var tasks = await _taskRepository.GetAllWithRelationsAsync();
+
+            // Filter tasks by userId if provided (for Role ID = 2)
+            if (userId.HasValue)
+            {
+                tasks = tasks.Where(t => t.UserId == userId.Value).ToList();
+            }
+
             return tasks.Select(t => MapToTaskDto(t)).ToList();
         }
 
@@ -125,11 +132,12 @@ namespace TaskManagerMVC.Services.Imp
                 Text = u.FullName ?? u.Username
             });
         }
-
-        public async Task<List<TaskDto>> GetFilteredTasks(string? title, int? statusId, int? priorityId)
+        public async Task<List<TaskDto>> GetFilteredTasks(string? title, int? statusId, int? priorityId, int? userId = null)
         {
-            return await _taskRepository.GetFilteredTasksAsync(title, statusId, priorityId);
+            return await _taskRepository.GetFilteredTasksAsync(title, statusId, priorityId, userId);
         }
+
+
 
         private static TaskDto MapToTaskDto(Models.Task task)
         {
@@ -142,7 +150,8 @@ namespace TaskManagerMVC.Services.Imp
                 DueDate = DateHelper.ToDisplayDate(task.DueDate),
                 PriorityName = task.Priority?.PriorityName,
                 StatusName = task.Status?.StatusName,
-                UserFullName = task.User?.FullName
+                UserFullName = task.User?.FullName,
+                IsOverdue = task.IsOverdue
             };
         }
     }

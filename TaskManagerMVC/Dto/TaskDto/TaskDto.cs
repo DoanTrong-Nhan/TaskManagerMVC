@@ -15,5 +15,7 @@ namespace TaskManagerMVC.Dtos
         public string? PriorityName { get; set; }
         public string? StatusName { get; set; }
         public string? UserFullName { get; set; }
+
+        public bool IsOverdue { get; set; }
     }
 }

@@ -21,17 +21,30 @@ namespace TaskManagerMVC.Controllers
 
         public async Task<IActionResult> ListTask()
         {
-            var tasks = await _taskService.GetAllTasksAsync();
+            var userId = _authService.GetCurrentUserId(User);
+            var userRoleId = await _authService.GetUserRoleIdAsync(User);
+
+            List<TaskDto> tasks;
+            if (userRoleId != 1)
+            {
+                tasks = await _taskService.GetAllTasksAsync(userId);
+                ViewBag.IsUserRole2 = true;
+            }
+            else
+            {
+                tasks = await _taskService.GetAllTasksAsync();
+                ViewBag.IsUserRole2 = false;
+            }
 
             var canCreate = await _authService.HasPermissionAsync(User,
-                            PermissionConstants.CreateTaskMethod,
-                            PermissionConstants.CreateTaskEndpoint);
+                PermissionConstants.CreateTaskMethod,
+                PermissionConstants.CreateTaskEndpoint);
 
             ViewBag.CanCreate = canCreate;
-
             await LoadDropdowns();
             return View(tasks);
         }
+
 
         // Form tạo mới
         [HttpGet]
@@ -125,7 +138,23 @@ namespace TaskManagerMVC.Controllers
         [HttpGet]
         public async Task<IActionResult> Search(string? title, int? statusId, int? priorityId)
         {
-            var tasks = await _taskService.GetFilteredTasks(title, statusId, priorityId);
+            // Get the current user's ID and role
+            var userId = _authService.GetCurrentUserId(User);
+            var userRoleId = await _authService.GetUserRoleIdAsync(User);
+
+            List<TaskDto> tasks;
+            if (userRoleId != 1)
+            {
+                // For Role ID != 1, only show tasks assigned to the current user
+                tasks = await _taskService.GetFilteredTasks(title, statusId, priorityId, userId);
+                ViewBag.IsUserRole2 = true; // Có thể giữ để hiển thị thông báo cho Role != 1
+            }
+            else
+            {
+                // For Role ID = 1, show all matching tasks
+                tasks = await _taskService.GetFilteredTasks(title, statusId, priorityId);
+                ViewBag.IsUserRole2 = false;
+            }
 
             ViewBag.SelectedTitle = title;
             ViewBag.SelectedStatusId = statusId;

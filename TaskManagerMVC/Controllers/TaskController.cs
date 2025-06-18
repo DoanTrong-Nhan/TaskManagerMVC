@@ -18,7 +18,6 @@ namespace TaskManagerMVC.Controllers
             _authService = authService;
         }
 
-
         public async Task<IActionResult> ListTask()
         {
             var userId = _authService.GetCurrentUserId(User);
@@ -37,21 +36,19 @@ namespace TaskManagerMVC.Controllers
             }
 
             var canCreate = await _authService.HasPermissionAsync(User,
-                PermissionConstants.CreateTaskMethod,
-                PermissionConstants.CreateTaskEndpoint);
+                PermissionConstants.CREATE_TASK_METHOD,
+                PermissionConstants.CREATE_TASK_ENDPOINT);
 
             ViewBag.CanCreate = canCreate;
             await LoadDropdowns();
             return View(tasks);
         }
 
-
         // Form tạo mới
         [HttpGet]
         public async Task<IActionResult> CreateTask()
         {
             await LoadDropdowns();
-
             return View();
         }
 
@@ -76,13 +73,16 @@ namespace TaskManagerMVC.Controllers
         {
             var dto = await _taskService.GetTaskForUpdateAsync(id);
 
-            var canUpdateGet = await _authService.HasPermissionAsync(User, "GET", "/task/update");
-            var canUpdatePost = await _authService.HasPermissionAsync(User, "POST", "/task/update");
+            var canUpdateGet = await _authService.HasPermissionAsync(User,
+                PermissionConstants.UPDATE_TASK_METHOD,
+                PermissionConstants.UPDATE_TASK_ENDPOINT);
+            var canUpdatePost = await _authService.HasPermissionAsync(User, "POST",
+                PermissionConstants.UPDATE_TASK_ENDPOINT);
             var canUpdate = canUpdateGet && canUpdatePost;
 
             var canDelete = await _authService.HasPermissionAsync(User,
-                                    PermissionConstants.DeleteTaskMethod,
-                                    PermissionConstants.DeleteTaskEndpoint);
+                PermissionConstants.DELETE_TASK_METHOD,
+                PermissionConstants.DELETE_TASK_ENDPOINT);
 
             ViewBag.CanUpdate = canUpdate;
             ViewBag.CanDelete = canDelete;
@@ -97,7 +97,8 @@ namespace TaskManagerMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(int id, TaskUpdateDto dto)
         {
-            var hasPermission = await _authService.HasPermissionAsync(User, "POST", "/task/update");
+            var hasPermission = await _authService.HasPermissionAsync(User, "POST",
+                PermissionConstants.UPDATE_TASK_ENDPOINT);
             if (!hasPermission)
             {
                 return NotFound();
@@ -121,8 +122,8 @@ namespace TaskManagerMVC.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var canDelete = await _authService.HasPermissionAsync(User,
-                          PermissionConstants.DeleteTaskMethod,
-                          PermissionConstants.DeleteTaskEndpoint);
+                PermissionConstants.DELETE_TASK_METHOD,
+                PermissionConstants.DELETE_TASK_ENDPOINT);
 
             if (!canDelete)
             {
@@ -134,7 +135,7 @@ namespace TaskManagerMVC.Controllers
             return RedirectToAction(nameof(ListTask));
         }
 
-        //Action to Search
+        // Action to Search
         [HttpGet]
         public async Task<IActionResult> Search(string? title, int? statusId, int? priorityId)
         {

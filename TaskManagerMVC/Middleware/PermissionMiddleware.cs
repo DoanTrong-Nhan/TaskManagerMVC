@@ -13,13 +13,12 @@ namespace TaskManagerMVC.Middleware
             _next = next;
         }
 
-
         public async Task Invoke(HttpContext context)
         {
             var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
             // ✅ Bỏ qua một số đường dẫn không cần kiểm tra quyền
-            if (path.StartsWith(PermissionConstants.WhitelistEndpoints))
+            if (path.StartsWith(PermissionConstants.WHITELIST_ENDPOINTS))
             {
                 await _next(context);
                 return;
@@ -29,19 +28,17 @@ namespace TaskManagerMVC.Middleware
             if (!context.User.Identity?.IsAuthenticated ?? true)
             {
                 // Cho phép truy cập các file tĩnh và trang login
-                if (path.StartsWith(PermissionConstants.WhitelistEndpoints) ||
-                    context.Request.Method == "POST") 
+                if (path.StartsWith(PermissionConstants.WHITELIST_ENDPOINTS) ||
+                    context.Request.Method == "POST")
                 {
                     await _next(context);
                     return;
                 }
 
                 // Chặn tất cả các trang khác
-                context.Response.Redirect(PermissionConstants.LoginConst);
+                context.Response.Redirect(PermissionConstants.LOGIN_ENDPOINT);
                 return;
             }
-
-
 
             // ✅ Lấy user ID từ claim
             var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -59,18 +56,18 @@ namespace TaskManagerMVC.Middleware
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
+
             // ✅ Kiểm tra quyền truy cập endpoint
             var method = context.Request.Method;
             var endpoint = path;
 
             var hasPermission = user.Role.RolePermissions.Any(rp =>
-     rp.Permission.Method.Equals(method, StringComparison.OrdinalIgnoreCase) &&
-     endpoint.StartsWith(rp.Permission.Endpoint, StringComparison.OrdinalIgnoreCase));
-
+                rp.Permission.Method.Equals(method, StringComparison.OrdinalIgnoreCase) &&
+                endpoint.StartsWith(rp.Permission.Endpoint, StringComparison.OrdinalIgnoreCase));
 
             if (!hasPermission)
             {
-                context.Response.Redirect(PermissionConstants.AccessDenied);
+                context.Response.Redirect(PermissionConstants.ACCESS_DENIED_ENDPOINT);
                 return;
             }
 

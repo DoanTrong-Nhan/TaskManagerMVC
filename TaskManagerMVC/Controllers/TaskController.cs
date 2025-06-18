@@ -63,18 +63,18 @@ namespace TaskManagerMVC.Controllers
         {
             var dto = await _taskService.GetTaskForUpdateAsync(id);
 
-            var canUpdate = await _authService.HasPermissionAsync(User,
-                      PermissionConstants.UpdateTaskMethod,
-                      PermissionConstants.UpdateTaskEndpoint);
+            var canUpdateGet = await _authService.HasPermissionAsync(User, "GET", "/task/update");
+            var canUpdatePost = await _authService.HasPermissionAsync(User, "POST", "/task/update");
+            var canUpdate = canUpdateGet && canUpdatePost;
 
             var canDelete = await _authService.HasPermissionAsync(User,
-                                PermissionConstants.DeleteTaskMethod,
-                                PermissionConstants.DeleteTaskEndpoint);
+                                    PermissionConstants.DeleteTaskMethod,
+                                    PermissionConstants.DeleteTaskEndpoint);
 
             ViewBag.CanUpdate = canUpdate;
             ViewBag.CanDelete = canDelete;
-
             ViewBag.TaskId = id;
+
             await LoadDropdowns();
             return View(dto);
         }
@@ -84,11 +84,16 @@ namespace TaskManagerMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(int id, TaskUpdateDto dto)
         {
+            var hasPermission = await _authService.HasPermissionAsync(User, "POST", "/task/update");
+            if (!hasPermission)
+            {
+                return NotFound();
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.TaskId = id;
-
-
+                ViewBag.CanUpdate = true;
                 await LoadDropdowns();
                 return View(dto);
             }
@@ -96,17 +101,22 @@ namespace TaskManagerMVC.Controllers
             await _taskService.UpdateTaskAsync(id, dto);
             return RedirectToAction(nameof(ListTask));
         }
+
         // Action để xóa Task
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var dto = new DeleteTaskDto { TaskId = id };
             var canDelete = await _authService.HasPermissionAsync(User,
-                      PermissionConstants.DeleteTaskMethod,
-                      PermissionConstants.DeleteTaskEndpoint);
-            ViewBag.CanDelete = canDelete;
+                          PermissionConstants.DeleteTaskMethod,
+                          PermissionConstants.DeleteTaskEndpoint);
 
+            if (!canDelete)
+            {
+                return NotFound();
+            }
+
+            var dto = new DeleteTaskDto { TaskId = id };
             await _taskService.DeleteTaskAsync(dto);
             return RedirectToAction(nameof(ListTask));
         }

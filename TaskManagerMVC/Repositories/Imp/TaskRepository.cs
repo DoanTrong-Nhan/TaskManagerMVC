@@ -5,6 +5,7 @@ using TaskManagerMVC.Dtos;
 using TaskManagerMVC.DBContext;
 using TaskManagerMVC.Models;
 using TaskManagerMVC.Repositories.Interfaces;
+using TaskManagerMVC.Helper;
 
 namespace TaskManagerMVC.Repositories.Imp
 {
@@ -197,10 +198,11 @@ namespace TaskManagerMVC.Repositories.Imp
                             : reader.GetString(reader.GetOrdinal(SqlConstants.ColDescription)),
                         StartDate = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColStartDate))
                             ? null
-                            : reader.GetDateTime(reader.GetOrdinal(SqlConstants.ColStartDate)).ToString("yyyy-MM-dd HH:mm:ss"),
+                            : DateHelper.ToDisplayDate(reader.GetDateTime(reader.GetOrdinal(SqlConstants.ColStartDate))),
+
                         DueDate = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColDueDate))
                             ? null
-                            : reader.GetDateTime(reader.GetOrdinal(SqlConstants.ColDueDate)).ToString("yyyy-MM-dd HH:mm:ss"),
+                            : DateHelper.ToDisplayDate(reader.GetDateTime(reader.GetOrdinal(SqlConstants.ColDueDate))),
                         StatusName = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColStatusName))
                             ? null
                             : reader.GetString(reader.GetOrdinal(SqlConstants.ColStatusName)),
@@ -210,6 +212,8 @@ namespace TaskManagerMVC.Repositories.Imp
                         UserFullName = reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColUserFullName))
                             ? null
                             : reader.GetString(reader.GetOrdinal(SqlConstants.ColUserFullName)),
+                        IsOverdue = !reader.IsDBNull(reader.GetOrdinal(SqlConstants.ColIsOverdue)) &&
+                            reader.GetBoolean(reader.GetOrdinal(SqlConstants.ColIsOverdue))
                     });
                 }
             }

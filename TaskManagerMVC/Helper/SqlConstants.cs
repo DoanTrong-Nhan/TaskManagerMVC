@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TaskManagerMVC
+namespace TaskManagerMVC.Helper
 {
     public static class SqlConstants
     {
@@ -23,6 +23,7 @@ namespace TaskManagerMVC
         public const string ColStatusName = "StatusName";
         public const string ColPriorityName = "PriorityName";
         public const string ColUserFullName = "UserFullName";
+        public const string ColIsOverdue = "IsOverdue";
     }
 
 }

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace TaskManagerMVC.Middleware
 {
@@ -35,13 +34,11 @@ namespace TaskManagerMVC.Middleware
             _logger.LogError(ex, "An unhandled exception occurred in the application.");
 
             var (statusCode, message) = GetErrorResponse(ex);
-            var encodedMessage = HttpUtility.UrlEncode(message);
+            var encodedMessage = WebUtility.UrlEncode(message);
 
-            // Chuyển hướng đến action Error trong HomeController
             context.Response.Redirect($"/Home/Error?statusCode={statusCode}&message={encodedMessage}");
         }
 
-        // Generate a standardized error response based on the exception type
         private (int StatusCode, string Message) GetErrorResponse(Exception ex) => ex switch
         {
             ArgumentNullException ane => (StatusCodes.Status400BadRequest, $"Invalid request: {ane.Message}"),

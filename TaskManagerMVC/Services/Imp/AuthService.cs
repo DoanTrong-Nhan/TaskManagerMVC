@@ -33,7 +33,10 @@ namespace TaskManagerMVC.Services.Imp
             var permissions = await GetPermissionsForUserAsync(userId);
             var key = $"{method}:{endpoint}".ToLower();
 
-            return permissions.Any(p => key.Contains($"{p.Method}:{p.Endpoint}".ToLower()));
+            return permissions.Any(p =>
+                  p.Method.Equals(method, StringComparison.OrdinalIgnoreCase) &&
+                  endpoint.StartsWith(p.Endpoint, StringComparison.OrdinalIgnoreCase));
+
         }
 
         private async Task<List<(string Method, string Endpoint)>> GetPermissionsForUserAsync(int userId)

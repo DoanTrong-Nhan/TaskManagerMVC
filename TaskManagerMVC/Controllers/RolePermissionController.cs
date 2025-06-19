@@ -56,20 +56,23 @@ namespace TaskManagerMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignPermissions(RolePermissionDto dto)
         {
-/*            if (!await IsAdminAsync())
-            {
-                return RedirectToAction("AccessDenied", "Login");
-            }*/
-
             if (!ModelState.IsValid)
             {
                 dto.AvailablePermissions = (await _authService.GetRolePermissionAsync(dto.RoleId)).AvailablePermissions;
                 return View(dto);
             }
 
-            await _authService.UpdateRolePermissionsAsync(dto.RoleId, dto.PermissionIds);
+            // Lọc ra các quyền được check
+            var assignedPermissionIds = dto.AvailablePermissions
+                .Where(p => p.IsAssigned)
+                .Select(p => p.PermissionId)
+                .ToList();
+
+            await _authService.UpdateRolePermissionsAsync(dto.RoleId, assignedPermissionIds);
+
             TempData["Message"] = "Phân quyền thành công!";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(ViewRole));
         }
+
     }
 }

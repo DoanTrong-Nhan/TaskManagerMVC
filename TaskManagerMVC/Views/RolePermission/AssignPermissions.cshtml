@@ -2,7 +2,10 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @using System.Linq
 
-@{ ViewData["Title"] = $"Phân quyền cho vai trò: {Model.RoleName}"; }
+@{
+    ViewData["Title"] = $"Phân quyền cho vai trò: {Model.RoleName}";
+}
+
 <!-- Hiển thị thông báo nếu có -->
 @if (TempData["Message"] != null)
 {
@@ -16,6 +19,7 @@
 <div class="card shadow">
     <div class="card-body">
         <form asp-action="AssignPermissions" asp-controller="RolePermission" method="post">
+            @* RoleId và RoleName cần được gửi lại *@
             <input type="hidden" asp-for="RoleId" />
             <input type="hidden" asp-for="RoleName" />
 
@@ -31,7 +35,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model.AvailablePermissions.Any())
+                        @if (Model.AvailablePermissions != null && Model.AvailablePermissions.Any())
                         {
                             @for (var i = 0; i < Model.AvailablePermissions.Count; i++)
                             {
@@ -40,13 +44,8 @@
                                     <td>@Model.AvailablePermissions[i].Method</td>
                                     <td>@Model.AvailablePermissions[i].Endpoint</td>
                                     <td>
-                                        <input type="checkbox" asp-for="AvailablePermissions[i].IsAssigned"
-                                               onchange="updatePermissionIds(this, @Model.AvailablePermissions[i].PermissionId)"
-                                               class="form-check-input" />
-                                        @if (Model.AvailablePermissions[i].IsAssigned)
-                                        {
-                                            <input type="hidden" name="PermissionIds" value="@Model.AvailablePermissions[i].PermissionId" />
-                                        }
+                                        <input type="checkbox" asp-for="AvailablePermissions[i].IsAssigned" class="form-check-input" />
+                                        <input type="hidden" asp-for="AvailablePermissions[i].PermissionId" />
                                     </td>
                                 </tr>
                             }
@@ -65,11 +64,10 @@
                 <button type="submit" class="btn btn-success">
                     <i class="bi bi-check-circle"></i> Lưu
                 </button>
-                <a asp-action="Index" asp-controller="RolePermission" class="btn btn-outline-secondary">
+                <a asp-action="ViewRole" asp-controller="RolePermission" class="btn btn-outline-secondary">
                     <i class="bi bi-x-circle"></i> Hủy
                 </a>
             </div>
-
         </form>
     </div>
 </div>

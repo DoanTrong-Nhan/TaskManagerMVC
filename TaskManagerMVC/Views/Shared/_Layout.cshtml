@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TaskManagerMVC.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+
+
 </head>
 <body>
     <header>
@@ -25,9 +27,22 @@
                         </li>
                     </ul>
 
+
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
+                            var roleIdClaim = User.Claims.FirstOrDefault(c => c.Type == "RoleId");
+                            var isAdmin = roleIdClaim != null && roleIdClaim.Value == "1";
+
+                            @if (isAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="RolePermission" asp-action="ViewRole">
+                                        <i class="bi bi-shield-lock"></i> Set Permission
+                                    </a>
+                                </li>
+                            }
+
                             <li class="nav-item">
                                 <form method="post" asp-controller="Login" asp-action="Logout" class="form-inline">
                                     <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
@@ -41,6 +56,8 @@
                             </li>
                         }
                     </ul>
+
+
                 </div>
 
             </div>

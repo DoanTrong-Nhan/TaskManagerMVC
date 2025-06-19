@@ -20,6 +20,7 @@ namespace TaskManagerMVC.Helpers
             if (!string.IsNullOrEmpty(user.Role?.RoleName))
             {
                 claims.Add(new Claim(ClaimTypes.Role, user.Role.RoleName));
+                claims.Add(new Claim("RoleId", user.Role.RoleId.ToString()));
             }
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

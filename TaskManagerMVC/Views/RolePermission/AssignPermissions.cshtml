@@ -1,0 +1,81 @@
+﻿@model TaskManagerMVC.Dto.Auth.RolePermissionDto
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using System.Linq
+
+@{ ViewData["Title"] = $"Phân quyền cho vai trò: {Model.RoleName}"; }
+<!-- Hiển thị thông báo nếu có -->
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Form phân quyền -->
+<div class="card shadow">
+    <div class="card-body">
+        <form asp-action="AssignPermissions" asp-controller="RolePermission" method="post">
+            <input type="hidden" asp-for="RoleId" />
+            <input type="hidden" asp-for="RoleName" />
+
+            <div class="form-group mb-4">
+                <h4>Danh sách quyền</h4>
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">Tên quyền</th>
+                            <th scope="col">Phương thức</th>
+                            <th scope="col">Endpoint</th>
+                            <th scope="col">Gán quyền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.AvailablePermissions.Any())
+                        {
+                            @for (var i = 0; i < Model.AvailablePermissions.Count; i++)
+                            {
+                                <tr>
+                                    <td>@Model.AvailablePermissions[i].PermissionName</td>
+                                    <td>@Model.AvailablePermissions[i].Method</td>
+                                    <td>@Model.AvailablePermissions[i].Endpoint</td>
+                                    <td>
+                                        <input type="checkbox" asp-for="AvailablePermissions[i].IsAssigned"
+                                               onchange="updatePermissionIds(this, @Model.AvailablePermissions[i].PermissionId)"
+                                               class="form-check-input" />
+                                        @if (Model.AvailablePermissions[i].IsAssigned)
+                                        {
+                                            <input type="hidden" name="PermissionIds" value="@Model.AvailablePermissions[i].PermissionId" />
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center">Không có quyền nào được tìm thấy.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-start gap-2">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Lưu
+                </button>
+                <a asp-action="Index" asp-controller="RolePermission" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Hủy
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

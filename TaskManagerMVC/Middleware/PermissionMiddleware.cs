@@ -29,7 +29,7 @@ namespace TaskManagerMVC.Middleware
             {
                 // Cho phép truy cập các file tĩnh và trang login
                 if (path.StartsWith(PermissionConstants.WHITELIST_ENDPOINTS) ||
-                    context.Request.Method == "POST")
+                    context.Request.Method == PermissionConstants.POST_METHOD)
                 {
                     await _next(context);
                     return;

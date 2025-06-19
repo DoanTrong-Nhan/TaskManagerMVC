@@ -68,6 +68,44 @@ namespace TaskManagerMVC.Services.Imp
 
             return appUser.Role.RoleId; // Lấy trực tiếp RoleId từ user.Role
         }
+        // admin phan quyen
+        public async Task<RolePermissionDto> GetRolePermissionAsync(int roleId)
+        {
+            var role = await _authRepository.GetRoleWithPermissionsAsync(roleId);
+            var allPermissions = await _authRepository.GetAllPermissionsAsync();
+
+            if (role == null)
+                return new RolePermissionDto();
+
+            var dto = new RolePermissionDto
+            {
+                RoleId = role.RoleId,
+                RoleName = role.RoleName,
+                PermissionIds = role.RolePermissions.Select(rp => rp.PermissionId).ToList(),
+                AvailablePermissions = allPermissions.Select(p => new PermissionDto
+                {
+                    PermissionId = p.PermissionId,
+                    PermissionName = p.PermissionName,
+                    Method = p.Method,
+                    Endpoint = p.Endpoint,
+                    IsAssigned = role.RolePermissions.Any(rp => rp.PermissionId == p.PermissionId)
+                }).ToList()
+            };
+
+            return dto;
+        }
+
+        public async Task<List<Role>> GetAllRolesAsync()
+        {
+            return await _authRepository.GetAllRolesAsync();
+        }
+
+        public async System.Threading.Tasks.Task UpdateRolePermissionsAsync(int roleId, List<int> permissionIds)
+        {
+            await _authRepository.UpdateRolePermissionsAsync(roleId, permissionIds);
+        }
+
+
 
     }
 }

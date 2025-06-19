@@ -4,7 +4,6 @@
     {
         private int _roleId;
         private Role _role = null!;
-
         private int _permissionId;
         private Permission _permission = null!;
 
@@ -40,6 +39,6 @@
             Permission = permission;
         }
 
-        private RolePermission() { }
+        public RolePermission() { }
     }
 }

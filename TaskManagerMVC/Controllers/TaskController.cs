@@ -36,7 +36,7 @@ namespace TaskManagerMVC.Controllers
             }
 
             var canCreate = await _authService.HasPermissionAsync(User,
-                PermissionConstants.CREATE_TASK_METHOD,
+                PermissionConstants.POST_METHOD,
                 PermissionConstants.CREATE_TASK_ENDPOINT);
 
             ViewBag.CanCreate = canCreate;
@@ -74,14 +74,14 @@ namespace TaskManagerMVC.Controllers
             var dto = await _taskService.GetTaskForUpdateAsync(id);
 
             var canUpdateGet = await _authService.HasPermissionAsync(User,
-                PermissionConstants.UPDATE_TASK_METHOD,
+                PermissionConstants.GET_METHOD,
                 PermissionConstants.UPDATE_TASK_ENDPOINT);
             var canUpdatePost = await _authService.HasPermissionAsync(User, "POST",
                 PermissionConstants.UPDATE_TASK_ENDPOINT);
             var canUpdate = canUpdateGet && canUpdatePost;
 
             var canDelete = await _authService.HasPermissionAsync(User,
-                PermissionConstants.DELETE_TASK_METHOD,
+                PermissionConstants.POST_METHOD,
                 PermissionConstants.DELETE_TASK_ENDPOINT);
 
             ViewBag.CanUpdate = canUpdate;
@@ -122,7 +122,7 @@ namespace TaskManagerMVC.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var canDelete = await _authService.HasPermissionAsync(User,
-                PermissionConstants.DELETE_TASK_METHOD,
+                PermissionConstants.POST_METHOD,
                 PermissionConstants.DELETE_TASK_ENDPOINT);
 
             if (!canDelete)

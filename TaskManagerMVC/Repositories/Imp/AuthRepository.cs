@@ -62,5 +62,52 @@ namespace TaskManagerMVC.Repositories.Imp
             return await _context.Roles
                 .FirstOrDefaultAsync(r => r.RoleName == roleName);
         }
+        // Phân quyền
+        public async Task<List<Permission>> GetAllPermissionsAsync()
+        {
+            return await _context.Permissions.ToListAsync();
+        }
+
+        public async Task<List<Role>> GetAllRolesAsync()
+        {
+            return await _context.Roles.ToListAsync();
+        }
+
+        public async Task<Role?> GetRoleWithPermissionsAsync(int roleId)
+        {
+            return await _context.Roles
+                .Include(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(r => r.RoleId == roleId);
+        }
+
+        public async System.Threading.Tasks.Task UpdateRolePermissionsAsync(int roleId, List<int> permissionIds)
+        {
+            // Lấy vai trò hiện tại
+            var role = await _context.Roles
+                .Include(r => r.RolePermissions)
+                .FirstOrDefaultAsync(r => r.RoleId == roleId);
+
+            if (role == null)
+                throw new InvalidOperationException("Role not found.");
+
+            // Xóa tất cả quyền hiện tại của vai trò
+            _context.RolePermissions.RemoveRange(role.RolePermissions);
+
+            // Thêm các quyền mới
+            foreach (var permissionId in permissionIds)
+            {
+                var permission = await _context.Permissions.FindAsync(permissionId);
+                if (permission != null)
+                {
+                    var rolePermission = new RolePermission(roleId, permissionId, role, permission);
+                    _context.RolePermissions.Add(rolePermission);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+
     }
 }

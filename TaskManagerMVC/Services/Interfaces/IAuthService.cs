@@ -13,5 +13,12 @@ namespace TaskManagerMVC.Services.Interfaces
         // Authorziration
         int GetCurrentUserId(ClaimsPrincipal user);
         Task<int> GetUserRoleIdAsync(ClaimsPrincipal user);
+
+        //ad min phan quyen 
+
+        Task<RolePermissionDto> GetRolePermissionAsync(int roleId);
+
+        System.Threading.Tasks.Task UpdateRolePermissionsAsync(int roleId, List<int> permissionIds);
+        Task<List<Role>> GetAllRolesAsync();
     }
 }
